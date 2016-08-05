@@ -94,6 +94,35 @@ def population(
     return pops
 
 
+def clip(data: pd.DataFrame, ranges: Mapping[str, Tuple[float, float]],
+         ignore: Sequence[str]=['ww'], renormalize: bool=True) -> pd.DataFrame:
+    '''
+    Clip a dataset to a fixed range, discarding other datapoints.
+
+    Parameters
+    ----------
+    data : Dataset to clip.
+    ranges : Ranges to clip in.
+    ignore : Columns to ignore.
+    renormalize : Recalculate the weights if needed.
+
+    Returns
+    -------
+    data : Clipped data
+
+    '''
+    for col in data.columns:
+        if col in ignore:
+            continue
+        data = (data[(data[col] > ranges[col][0]) &
+                     (data[col] < ranges[col][1])])
+
+    if renormalize:
+        data['ww'] /= data['ww'].sum()
+
+    return data
+
+
 def stats(fields: Sequence[str], data: np.ndarray) -> Sequence[str]:
     '''
     Calculate statistical properties of dataset and format them nicely.
