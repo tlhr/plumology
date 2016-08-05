@@ -121,6 +121,64 @@ def hex(
     return ax
 
 
+def dihedral(cvdata: pd.DataFrame,
+             cmap: Optional[ListedColormap]=None) -> plt.Figure:
+    '''
+    Plot dihedral angle data as an eventplot.
+
+    Parameters
+    ----------
+    cvdata : Dataframe with angle data only.
+    cmap : Colormap to use.
+
+    Returns
+    -------
+    fig : Figure with drawn events.
+
+    '''
+    # Custom periodic colormap
+    if cmap is None:
+
+        # Define some colors
+        blue = '#2971B1'
+        red = '#B92732'
+        white = '#F7F6F6'
+        black = '#3B3B3B'
+
+        # Define the colormap
+        periodic = LinearSegmentedColormap.from_list(
+            'periodic',
+            [black, red, red, white, blue, blue, black],
+            N=2560,
+            gamma=1
+        )
+        cmap = periodic
+
+    # Setup plot
+    fig, axes = plt.subplots(figsize=(16, 32), nrows=cvdata.shape[1])
+    fig.subplots_adjust(top=0.95, bottom=0.01, left=0.2, right=0.99, hspace=0)
+
+    for ax, col in zip(axes, cvdata.columns):
+
+        # No interpolation because we want discrete lines
+        ax.imshow(np.atleast_2d(cvdata[col]), aspect='auto',
+                  cmap=periodic, interpolation='none')
+
+        # Create labels
+        pos = list(ax.get_position().bounds)
+        x_text = pos[0] - 0.01
+        y_text = pos[1] + pos[3]/2.
+        fig.text(x_text, y_text, col, va='center', ha='right', fontsize=10)
+
+        # Remove clutter
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+
+    return fig
+
+
 def history(cvdata: pd.DataFrame) -> None:
     '''
     Plot CV history as a 2D scatter plot.
