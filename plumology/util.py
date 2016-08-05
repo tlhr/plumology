@@ -8,8 +8,8 @@ import os
 from os.path import join
 import subprocess
 import tempfile
-from typing import (Any, Sequence, List, Tuple,
-                    Dict, Callable, Union, Optional)
+from typing import (Any, Sequence, List, Tuple, Dict,
+                    Callable, Union, Optional, Mapping)
 
 import h5py
 import numpy as np
@@ -60,6 +60,38 @@ def _typecheck(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
         return func(*args, **kwargs)
 
     return decorator
+
+
+def population(
+    data: pd.DataFrame,
+    minima: Sequence[Tuple[float, float]],
+    radius: float=2.0,
+    weight_name: Optional[str]=None,
+    cv_names: Tuple[str, str]=('cv1', 'cv2')
+) -> Dict[str, Dict[Tuple[float, float], float]]:
+    '''
+    Calculate the population on a 2D free energy surface by summing up weights.
+
+    Parameters
+    ----------
+    data : Dataframe including weights and two collective variables.
+    minima : List of centers of minima.
+    radius : Aggregation radius.
+    weight_name : Name of the weight column.
+
+    Returns
+    -------
+    population : Dictionary containing percentages mapped to minima.
+
+    '''
+    pops = {}
+    for coords in minima:
+        p = sum(data[(data[cv_names[0]] > (coords[0] - radius)) &
+                     (data[cv_names[0]] < (coords[0] + radius)) &
+                     (data[cv_names[1]] > (coords[1] - radius)) &
+                     (data[cv_names[1]] < (coords[1] + radius))][weight_name])
+        pops[coords] = p
+    return pops
 
 
 def stats(fields: Sequence[str], data: np.ndarray) -> Sequence[str]:
