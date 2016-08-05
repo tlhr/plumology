@@ -19,7 +19,8 @@ from scipy.stats import binned_statistic_2d, binned_statistic, entropy
 from .io import read_nmr, read_rdc
 
 __all__ = ['calc_entropy', 'calc_nmr', 'calc_rdc', 'calc_rmsd', 'stats',
-           'calc_wham', 'chunk_range', 'dist1D', 'dist2D', 'free_energy']
+           'calc_wham', 'chunk_range', 'dist1D', 'dist2D', 'free_energy',
+           'clip', 'population']
 
 
 def _preserve_cwd(func: Callable[[Any], Any]) -> Callable[[Any], Any]:

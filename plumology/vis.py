@@ -7,11 +7,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.collections import RegularPolyCollection
+from matplotlib.colors import LinearSegmentedColormap, ListedColormap
+from matplotlib.colorbar import ColorbarBase
 
 from .util import stats, chunk_range
 from .io import read_multi, read_plumed
 
-__all__ = ['fast', 'dist1D', 'dist2D', 'hex', 'histogram',
+__all__ = ['fast', 'dist1D', 'dist2D', 'hex', 'histogram', 'dihedral'
            'history', 'interactive', 'metai', 'rmsd']
 
 
