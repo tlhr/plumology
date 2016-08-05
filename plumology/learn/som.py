@@ -96,6 +96,7 @@ class SOM:
         self._map_radius = max(nx, ny) / 2
         self._dlambda = self._iterations / np.log(self._map_radius)
         self._shape = (nx, ny)
+        self._trained = False
 
         if seed is not None:
             np.random.seed(seed)
@@ -309,6 +310,8 @@ class SOM:
         grid : subset of the input data assigned to the best nodes
 
         '''
+        if not self._trained:
+            raise ValueError('You need to train the SOM first!')
         if not hasattr(self, 'index'):
             raise ValueError('You need to index the SOM first!')
 
