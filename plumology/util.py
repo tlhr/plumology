@@ -8,8 +8,8 @@ import os
 from os.path import join
 import subprocess
 import tempfile
-from typing import (Any, Sequence, List, Tuple,
-                    Dict, Callable, Union, Optional)
+from typing import (Any, Sequence, List, Tuple, Dict,
+                    Callable, Union, Optional, Mapping)
 
 import h5py
 import numpy as np
@@ -19,7 +19,8 @@ from scipy.stats import binned_statistic_2d, binned_statistic, entropy
 from .io import read_nmr, read_rdc
 
 __all__ = ['calc_entropy', 'calc_nmr', 'calc_rdc', 'calc_rmsd', 'stats',
-           'calc_wham', 'chunk_range', 'dist1D', 'dist2D', 'free_energy']
+           'calc_wham', 'chunk_range', 'dist1D', 'dist2D', 'free_energy',
+           'clip', 'population']
 
 
 def _preserve_cwd(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
@@ -60,6 +61,67 @@ def _typecheck(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
         return func(*args, **kwargs)
 
     return decorator
+
+
+def population(
+    data: pd.DataFrame,
+    minima: Sequence[Tuple[float, float]],
+    radius: float=2.0,
+    weight_name: Optional[str]=None,
+    cv_names: Tuple[str, str]=('cv1', 'cv2')
+) -> Dict[str, Dict[Tuple[float, float], float]]:
+    '''
+    Calculate the population on a 2D free energy surface by summing up weights.
+
+    Parameters
+    ----------
+    data : Dataframe including weights and two collective variables.
+    minima : List of centers of minima.
+    radius : Aggregation radius.
+    weight_name : Name of the weight column.
+
+    Returns
+    -------
+    population : Dictionary containing percentages mapped to minima.
+
+    '''
+    pops = {}
+    for coords in minima:
+        p = sum(data[(data[cv_names[0]] > (coords[0] - radius)) &
+                     (data[cv_names[0]] < (coords[0] + radius)) &
+                     (data[cv_names[1]] > (coords[1] - radius)) &
+                     (data[cv_names[1]] < (coords[1] + radius))][weight_name])
+        pops[coords] = p
+    return pops
+
+
+def clip(data: pd.DataFrame, ranges: Mapping[str, Tuple[float, float]],
+         ignore: Sequence[str]=['ww'], renormalize: bool=True) -> pd.DataFrame:
+    '''
+    Clip a dataset to a fixed range, discarding other datapoints.
+
+    Parameters
+    ----------
+    data : Dataset to clip.
+    ranges : Ranges to clip in.
+    ignore : Columns to ignore.
+    renormalize : Recalculate the weights if needed.
+
+    Returns
+    -------
+    data : Clipped data
+
+    '''
+    for col in data.columns:
+        if col in ignore:
+            continue
+        data = (data[(data[col] > ranges[col][0]) &
+                     (data[col] < ranges[col][1])])
+
+    if renormalize:
+        data['ww'] /= data['ww'].sum()
+
+    return data
 
 
 def stats(fields: Sequence[str], data: np.ndarray) -> Sequence[str]:

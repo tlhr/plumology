@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 from importlib import import_module
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
 
 DESCRIPTION = 'Plumology - Biased molecular dynamics analysis'
