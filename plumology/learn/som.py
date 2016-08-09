@@ -49,7 +49,7 @@ class SOM:
     --------
     Here we train a 20 by 30 SOM on some colors:
 
-    >>> from mdtools import SOM
+    >>> from plumology.learn import SOM
     >>> som = SOM(20, 30, 3, iterations=400, learning_rate=0.2)
     >>> colors = np.array(
     ...     [[0., 0., 0.],
@@ -84,10 +84,6 @@ class SOM:
         learning: str='exp',
         seed: Optional[int]=None
     ) -> None:
-
-        # Numba is unfortunately unable to deal with string data and
-        # falls back into pyobject mode when using @jitclass. So we
-        # use the normal @jit functions to at least get function inlining.
 
         self._iterations = iterations
         self._init_learning_rate = learning_rate
@@ -186,7 +182,6 @@ class SOM:
         return np.exp(-dist ** 2 / (2 * sigma ** 2))
 
     def _nb_bubble(self, dist: np.ndarray, sigma: float) -> np.ndarray:
-        # We just hope numba inlines this...
         return dist
 
     def _nb_epanechnikov(self, dist: np.ndarray, sigma: float) -> np.ndarray:
