@@ -1,6 +1,6 @@
 '''som - Self-organising-map'''
 
-from typing import Optional
+from typing import Optional, Tuple
 import numpy as np
 from sklearn.decomposition import PCA
 
@@ -20,6 +20,8 @@ class SOM:
         Should be at least 10 times the number of neurons.
     learning_rate : The learning rate specifies the
         tradeoff between speed and accuracy of the SOM.
+    distance : { 'euclidean', 'periodic' }
+        The distance metric to use.
     init : { 'random', 'pca' }
         Initialization method. "pca" uses a grid spanned by the first two
         eigenvectors of the principal component analysis of the input data.
@@ -77,6 +79,7 @@ class SOM:
         ndims: int,
         iterations: int,
         learning_rate: float=0.5,
+        distance: str='euclid',
         init: str='random',
         grid: str='rect',
         train: str='seq',
@@ -104,6 +107,15 @@ class SOM:
             self._type = 'b'
         else:
             e = 'Invalid training type! Valid types: sequential, batch'
+            raise ValueError(e)
+
+        # Init distance type
+        if distance.startswith('euclid'):
+            self._dist = self._euclid_dist
+        elif distance.startswith('per'):
+            self._dist = self._periodic_dist
+        else:
+            e = 'Invalid distance type! Valid types: euclidean, periodic'
             raise ValueError(e)
 
         # Init weights
@@ -201,6 +213,24 @@ class SOM:
                 (self._init_learning_rate * t * (np.exp(1) - 1) /
                     (self._iterations * np.exp(1))))
 
+    def _euclid_dist(
+        self,
+        xmat: np.ndarray,
+        index: Tuple[int, int]=(),
+        axis: int=2
+    ) -> np.ndarray:
+        return np.sqrt(((xmat - self.weights[index]) ** 2).sum(axis=axis))
+
+    def _periodic_dist(
+        self,
+        xmat: np.ndarray,
+        index: Tuple[int, int]=(),
+        axis: int=2
+    ) -> np.ndarray:
+        pi2 = np.pi * 2
+        dx = (xmat - self.weights[index]) / pi2
+        return np.sqrt((((dx - round(dx)) * pi2) ** 2).sum(axis=axis))
+
     def _train(self, X: np.ndarray) -> None:
         for t in range(self._iterations):
             # Update learning rate, reduce radius
@@ -212,7 +242,7 @@ class SOM:
 
             # Calc euclidean distance
             xmat = np.broadcast_to(f, self._shape + (self._ndims,))
-            index = np.sqrt(((xmat - self.weights) ** 2).sum(axis=2)).argmin()
+            index = self._dist(xmat).argmin()
             bmu = np.unravel_index(index, self._shape)
 
             # Create distance matrix
@@ -235,8 +265,7 @@ class SOM:
             for f in X:
                 # Calc euclidean distance
                 xmat = np.broadcast_to(f, self._shape + (self._ndims,))
-                index = (np.sqrt(((xmat - self.weights) ** 2).sum(axis=2))
-                         .argmin())
+                index = self._dist(xmat).argmin()
                 bmu = np.unravel_index(index, self._shape)
 
                 # Create distance matrix
@@ -286,9 +315,7 @@ class SOM:
 
         # For each node we calculate the distance to each datapoint
         for index in np.ndindex(self._shape):
-            self.index[index] = np.sqrt(
-                ((self.weights[index] - X) ** 2).sum(axis=1)
-            ).argmin()
+            self.index[index] = self._dist(X, index=index, axis=1)
 
     def transform(self, X: np.ndarray) -> np.ndarray:
         '''
