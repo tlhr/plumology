@@ -190,6 +190,84 @@ def chunk_range(chunk_min: float,
     return chunks
 
 
+def last_nonzero(data: pd.DataFrame) -> pd.Series:
+    '''
+    Get the last non-zero elements from a dataframe.
+
+    Parameters
+    ----------
+    data : Dataframe containing data.
+
+    Returns
+    -------
+    nonzero : Series of last non-zero datapoints.
+
+    '''
+    nonzero = {}
+    for col in data.columns:
+        nonzero[col] = data[col][data[col] > 0.000].iloc[-1]
+    return pd.Series(nonzero)
+
+
+def calc_bse(
+    data: pd.DataFrame,
+    weight_name: Optional[str]=None,
+    ignore: Sequence[str]=['time']
+) -> pd.DataFrame:
+    '''
+    Calculate the Block Standard Error (BSE).
+
+    Parameters
+    ----------
+    data : Dataframe with CV data over time and weights.
+    weight_name : Name of the weight column.
+    ignore : List of column names to ignore.
+
+    Returns
+    -------
+    bse : Dataframe containing BSEs over all iterations.
+
+    References
+    ----------
+    Flyvbjerg, H., Petersen, H. G. Error estimates on averages of correlated
+    data. The Journal of Chemical Physics, 91(1), 461 (1989)
+
+    '''
+
+    # Prepare input, first element
+    if weight_name is not None:
+        weights = data[weight_name].values
+        ignore.append(weight_name)
+
+    length = data.shape[0]
+    width = data.shape[1]
+    index = data.T.index
+    data = data.values
+    blist = [data.std(axis=0) / np.sqrt(length)]
+    length = length // 2
+
+    # Iteratively increase block size
+    while length > 2:
+        halved = np.empty((length, width))
+
+        # Each iteration, we halve the dataset
+        for i in range(0, length):
+            if weight_name is not None:
+                halved[i] = (1 / (weights[2 * i - 1] + weights[2 * i]) *
+                             (data[2 * i - 1] * weights[2 * i - 1] +
+                              data[2 * i] * weights[2 * i]))
+            else:
+                halved[i] = 0.5 * (data[2 * i - 1] + data[2 * i])
+
+        # Calculate the BSE
+        bse = halved.std(axis=0) / np.sqrt(length)
+        blist.append(bse)
+        length = length // 2
+
+    # Reconstruct Dataframe
+    return pd.DataFrame(np.asarray(blist), columns=index).drop(ignore, axis=1)
+
+
 def calc_wham(bias: Union[str, np.ndarray],
               kbt: float=2.49339) -> np.ndarray:
     '''
@@ -419,6 +497,30 @@ def free_energy(dist: pd.DataFrame, kbt: float) -> pd.DataFrame:
                          if p != 0 else float('inf'))
 
 
+def calc_sqdev(data: pd.DataFrame,
+               grouper: Optional[str]='ff') -> pd.DataFrame:
+    '''
+    Calculate the Squared-Deviation per residue.
+
+    Parameters
+    ----------
+    data : Multiindexed dataframe with force field and residue number
+
+    Returns
+    -------
+    sqdev : Force field indexed dataframe
+
+    '''
+    cols = [c for c in data.columns if 'exp' not in c]
+
+    # Separate dataframe into simulation data and experimental data
+    ef = data.drop(cols, axis=1).rename(columns={'exp_' + c: c for c in cols})
+    af = data.drop([c for c in data.columns if 'exp' in c], axis=1)
+
+    # return sqdev dataframe
+    return ((af - ef) ** 2)
+
+
 def calc_rmsd(data: pd.DataFrame,
               grouper: Optional[str]='ff') -> pd.DataFrame:
     '''
@@ -433,16 +535,9 @@ def calc_rmsd(data: pd.DataFrame,
     rmsd : Force field indexed dataframe
 
     '''
-    cols = [c for c in data.columns if 'exp' not in c]
-
-    # Separate dataframe into simulation data and experimental data
-    ef = data.drop(cols, axis=1).rename(columns={'exp_' + c: c for c in cols})
-    af = data.drop([c for c in data.columns if 'exp' in c], axis=1)
-
-    # return RMSD dataframe grouped by forcefield
-    return (((af - ef) ** 2).groupby(level=[grouper])
-                            .agg(lambda x: np.mean(x))
-                            .apply(np.sqrt))
+    return (calc_sqdev(data, grouper=grouper).groupby(level=[grouper])
+                                             .agg(lambda x: np.mean(x))
+                                             .apply(np.sqrt))
 
 
 def calc_rdc(executable: str,
