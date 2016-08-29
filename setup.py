@@ -2,7 +2,7 @@
 
 from importlib import import_module
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
     from distutils.core import setup
 
@@ -27,7 +27,7 @@ MAINTAINER_EMAIL = 'thomas.loehr@tum.de'
 DOWNLOAD_URL = 'https://github.com/tlhr/plumology'
 URL = 'https://github.com/tlhr/plumology'
 LICENSE = 'MIT'
-VERSION = '0.0.1-dev'
+VERSION = '0.0.1'
 
 
 def check_deps():
@@ -54,26 +54,26 @@ def check_deps():
             print('Warning: {0} not found but recommended!'.format(pack))
 
 
-if __name__ == '__main__':
-    missing = check_deps()
-    setup(
-        name=DISTNAME,
-        author=MAINTAINER,
-        author_email=MAINTAINER_EMAIL,
-        maintainer=MAINTAINER,
-        maintainer_email=MAINTAINER_EMAIL,
-        description=DESCRIPTION,
-        long_description=LONG_DESCRIPTION,
-        license=LICENSE,
-        url=URL,
-        version=VERSION,
-        download_url=DOWNLOAD_URL,
-        install_requires=missing,
-        classifiers=[
-            'Intended Audience :: Science/Research',
-            'Programming Language :: Python :: 3.5',
-            'Operating System :: POSIX',
-            'Operating System :: Unix',
-            'Operating System :: MacOS'
-        ]
-    )
+missing = check_deps()
+setup(
+    name=DISTNAME,
+    author=MAINTAINER,
+    author_email=MAINTAINER_EMAIL,
+    maintainer=MAINTAINER,
+    maintainer_email=MAINTAINER_EMAIL,
+    description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
+    license=LICENSE,
+    url=URL,
+    version=VERSION,
+    download_url=DOWNLOAD_URL,
+    install_requires=missing,
+    packages=find_packages(),
+    classifiers=[
+        'Intended Audience :: Science/Research',
+        'Programming Language :: Python :: 3.5',
+        'Operating System :: POSIX',
+        'Operating System :: Unix',
+        'Operating System :: MacOS'
+    ]
+)
