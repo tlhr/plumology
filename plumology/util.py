@@ -69,7 +69,7 @@ def population(
     radius: float=2.0,
     weight_name: Optional[str]=None,
     cv_names: Tuple[str, str]=('cv1', 'cv2')
-) -> Dict[str, Dict[Tuple[float, float], float]]:
+) -> Dict[Tuple[float, float], float]:
     '''
     Calculate the population on a 2D free energy surface by summing up weights.
 
@@ -212,7 +212,7 @@ def last_nonzero(data: pd.DataFrame) -> pd.Series:
 def calc_bse(
     data: pd.DataFrame,
     weight_name: Optional[str]=None,
-    ignore: Sequence[str]=['time']
+    ignore: List[str]=['time']
 ) -> pd.DataFrame:
     '''
     Calculate the Block Standard Error (BSE).

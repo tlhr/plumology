@@ -227,14 +227,17 @@ def read_multi(
     if isinstance(files, str):
         files = [files]
 
-    filelist = []
+    # Sanity check
+    kwargs.pop('dataframe', {'': ''})
+
+    filelist = []  # type: List[str]
     for file in files:
         if any(char in file for char in '*?[]'):
             filelist.extend(glob.iglob(file))
         else:
             filelist.append(file)
 
-    dflist = []
+    dflist = []  # type: List[str]
     for i, file in enumerate(filelist):
         df = read_plumed(file, **kwargs)
         dflist.append(df.rename(columns={
@@ -293,6 +296,7 @@ def fields_to_columns(
     Returns
     -------
     columns : Column indices, None if fields is none.
+
     '''
     if fields is None:
         return tuple(full_fields), None
@@ -407,7 +411,7 @@ def read_nmr(
         )
 
     # Iterate over files
-    shifts = {}
+    shifts = {}  # type: Dict[str, float]
     for i, file in enumerate(spfiles):
         with open(file, 'r') as sf:
 
