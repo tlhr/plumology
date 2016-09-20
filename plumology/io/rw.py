@@ -130,6 +130,7 @@ def read_plumed(
     step: int=1,
     start: int=0,
     stop: int=sys.maxsize,
+    replicas: bool=False,
     high_mem: bool=True,
     dataframe: bool=True,
     raise_error: bool=False,
@@ -147,6 +148,7 @@ def read_plumed(
         including commented lines.
     stop : Stopping point in lines from beginning of file,
         including commented lines.
+    replicas : Enable chunked reading (multiple datapoints per timestep).
     high_mem : Use high memory version, which might be faster.
         Reads in the whole array and then slices it.
     dataframe : Return as pandas dataframe.
@@ -174,6 +176,7 @@ def read_plumed(
 
     if full_array or high_mem:
         nrows = stop - start if stop != sys.maxsize else None
+
         df = pd.read_csv(
             file,
             sep='\s+',
@@ -183,9 +186,22 @@ def read_plumed(
             dtype=np.float64,
             skiprows=start,
             nrows=nrows,
-            usecols=columns
+            usecols=columns,
         )
-        data = df[::step]
+
+        # If several replicas write to the same file, we shouldn't use
+        # the normal step, since we would only be reading a subset of
+        # the replica data (worst case only one!). So we read in chunks
+        # the size of the number of replicas.
+        if replicas:
+            dfgs = []
+            for i, (_, dfg) in enumerate(df.groupby('time')):
+                if i % step == 0:
+                    dfgs.append(dfg)
+            data = pd.concat(dfgs)
+        else:
+            data = df[::step]
+
         if drop_nan:
             data.dropna(axis=0)
 
@@ -325,11 +341,11 @@ def read_all_hills(files: Sequence[str],
     '''
     length = file_length(files[0]) - 1
     timedata = read_plumed(files[0], step=step, stop=length,
-                           columns=(0,), dataframe=True)
+                           replicas=True, columns=(0,), dataframe=True)
     for file in files:
-        data = read_plumed(file, step=step, stop=length,
-                           columns=(1,), dataframe=True)
-        timedata = pd.concat([timedata, data], axis=1)
+        data = read_plumed(files[0], step=step, stop=length,
+                           replicas=True, dataframe=True)
+        timedata = pd.concat([timedata, pd.DataFrame(data.iloc[:, 1])], axis=1)
     return timedata.dropna(axis=0)
 
 
