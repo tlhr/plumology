@@ -3,18 +3,21 @@
 from collections import OrderedDict
 import glob
 import itertools
+from os.path import join
 import re
+import subprocess
+import sys
+import tempfile
 from typing import (Any, Sequence, List, Tuple, Iterator, Mapping,
                     Dict, Union, Optional)
 
-import sys
 import numpy as np
 import pandas as pd
 
 __all__ = ['is_plumed', 'is_same_shape', 'read_plumed_fields',
            'read_rdc', 'read_nmr', 'read_plumed', 'read_multi',
            'read_all_hills', 'plumed_iterator', 'file_length',
-           'field_glob', 'fields_to_columns']
+           'field_glob', 'fields_to_columns', 'sum_hills']
 
 
 def is_plumed(file: str) -> bool:
@@ -326,6 +329,7 @@ def fields_to_columns(
 
 
 def read_all_hills(files: Union[Sequence[str], str],
+                   colvar: bool=False,
                    step: int=1) -> pd.DataFrame:
     '''
     Read CV information from HILLS files.
@@ -350,17 +354,60 @@ def read_all_hills(files: Union[Sequence[str], str],
         else:
             filelist.append(file)
 
-    # Read the time column first
-    length = file_length(filelist[0]) - 1
-    timedata = read_plumed(filelist[0], step=step, stop=length,
-                           replicas=True, columns=(0,), dataframe=True)
+    if colvar:
+        raw = []
+        for file in sorted(filelist):
+            raw.append(read_plumed(file, step=step))
 
-    # Append all other columns
-    for file in sorted(filelist):
-        data = read_plumed(file, step=step, stop=length,
-                           replicas=True, dataframe=True)
-        timedata = pd.concat([timedata, pd.DataFrame(data.iloc[:, 1])], axis=1)
-    return timedata.dropna(axis=0)
+        return (pd.concat(raw)
+                  .sort_values('time')
+                  .dropna(axis=0)
+                  .sort_index()
+                  .drop('pb.bias', axis=1))
+
+    else:
+        # Read the time column first
+        length = file_length(filelist[0]) - 1
+        timedata = read_plumed(filelist[0], step=step, stop=length,
+                               replicas=True, columns=(0,), dataframe=True)
+
+        # Append all other columns
+        for file in sorted(filelist):
+            data = read_plumed(file, step=step, stop=length,
+                               replicas=True, dataframe=True)
+            timedata = pd.concat(
+                [timedata, pd.DataFrame(data.iloc[:, 1])], axis=1
+            )
+        return timedata.dropna(axis=0).sort_index()
+
+
+def sum_hills(files: Union[Sequence[str], str],
+              nbins: int=50, plumed: str='plumed') -> pd.DataFrame:
+
+    if isinstance(files, str):
+        files = [files]
+
+    # Prepare list from globbed strings
+    filelist = []  # type: List[str]
+    for file in files:
+        if any(char in file for char in '*?[]'):
+            filelist.extend(glob.iglob(file))
+        else:
+            filelist.append(file)
+
+    # Run sum_hills first
+    raw = {}
+    with tempfile.TemporaryDirectory() as tmp:
+        for hf in sorted(filelist):
+            filename = hf.split('/')[-1]
+            output = join(tmp, filename)
+            cmd = '{0} sum_hills --hills {1} --bin {2} --outfile {3}'.format(
+                plumed, hf, nbins, output
+            ).split()
+            subprocess.run(cmd, check=True)
+            raw[filename] = read_plumed(output)['file.free']
+
+    return pd.DataFrame(raw)
 
 
 def read_rdc(files: Sequence[str]) -> Dict[str, float]:
