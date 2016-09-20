@@ -8,13 +8,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.collections import RegularPolyCollection
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap
-from matplotlib.colorbar import ColorbarBase
 
-from .util import stats, chunk_range
+from .util import stats, chunk_range, free_energy
+from .util import dist1D as calc_dist1D
 from .io import read_multi, read_plumed
 
-__all__ = ['fast', 'dist1D', 'dist2D', 'hex', 'histogram', 'dihedral'
-           'history', 'interactive', 'metai', 'rmsd']
+__all__ = ['fast', 'dist1D', 'dist2D', 'hex', 'histogram', 'dihedral',
+           'history', 'interactive', 'metai', 'rmsd', 'convergence']
 
 
 def fast(filename: str,
@@ -254,6 +254,37 @@ def histogram(cvdata: pd.DataFrame,
             ax.set_xlabel(col)
             ax.set_xlim(cv_min[i - 1], cv_max[i - 1])
     plt.tight_layout()
+
+
+def convergence(
+    hills: pd.DataFrame,
+    summed_hills: pd.DataFrame,
+    time: int,
+    kbt: float,
+    factor: float=1.0,
+    constant: float=0.0
+) -> plt.Figure:
+
+    dist, ranges = calc_dist1D(hills[hills['time'] > time])
+    fes = factor * free_energy(dist, kbt) + constant
+
+    # consistent naming
+    summed_hills.columns = hills.columns.drop('time')
+
+    # sum_hills binning can be inconsistent
+    if summed_hills.shape[0] > fes.shape[0]:
+        summed_hills = summed_hills[:fes.shape[0]]
+
+    ncols = len(fes.columns)
+    fig = plt.figure(figsize=(16, 4 * (ncols // 2 + 1)))
+    for i, col in enumerate(fes.columns):
+        ax = fig.add_subplot(ncols // 2 + 1, 2, i + 1)
+        ax.plot(ranges[col], fes[col], label='histogram')
+        ax.plot(ranges[col], summed_hills[col], label='sum_hills')
+        ax.set_xlabel(col)
+    ax.legend()
+
+    return fig
 
 
 def dist1D(dist: pd.DataFrame,
