@@ -264,6 +264,23 @@ def convergence(
     factor: float=1.0,
     constant: float=0.0
 ) -> plt.Figure:
+    '''
+    Estimate convergence by comparing CV histograms and sum_hills output.
+
+    Parameters
+    ----------
+    hills : Hills files to be passed to PLUMED, globbing allowed.
+    summed_hills : Output from io.sum_hills().
+    time : The minimum time to use from the histogram.
+    kbt : k_B * T for the simulation as output by PLUMED.
+    factor : Factor to rescale the FES.
+    constant : Constant to translate the FES.
+
+    Returns
+    -------
+    fig : Matplotlib figure.
+
+    '''
 
     dist, ranges = calc_dist1D(hills[hills['time'] > time])
     fes = factor * free_energy(dist, kbt) + constant

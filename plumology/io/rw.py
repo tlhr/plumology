@@ -383,6 +383,20 @@ def read_all_hills(files: Union[Sequence[str], str],
 
 def sum_hills(files: Union[Sequence[str], str],
               nbins: int=50, plumed: str='plumed') -> pd.DataFrame:
+    '''
+    Calculate the free-energy using plumed sum_hills.
+
+    Parameters
+    ----------
+    files : Hills files to be passed to PLUMED, globbing allowed.
+    nbins : Number of bins to use for histogramming.
+    plumed : Path to the PLUMED executable.
+
+    Returns
+    -------
+    summed_hills : Dataframe containing binned data for each hills file.
+
+    '''
 
     if isinstance(files, str):
         files = [files]
