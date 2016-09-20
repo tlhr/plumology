@@ -325,25 +325,39 @@ def fields_to_columns(
                                     for s in fields if s in full_fields)
 
 
-def read_all_hills(files: Sequence[str],
+def read_all_hills(files: Union[Sequence[str], str],
                    step: int=1) -> pd.DataFrame:
     '''
     Read CV information from HILLS files.
 
     Parameters
     ----------
-    files : List of filenames to read from.
+    files : List of filenames or glob pattern to read from.
     step : Stepsize to use while reading.
     Returns
     -------
     timedata : Dataframe with time as first column and CV data for the rest.
 
     '''
-    length = file_length(files[0]) - 1
-    timedata = read_plumed(files[0], step=step, stop=length,
-                           replicas=True, columns=(0,), dataframe=True)
+    if isinstance(files, str):
+        files = [files]
+
+    # Prepare list from globbed strings
+    filelist = []  # type: List[str]
     for file in files:
-        data = read_plumed(files[0], step=step, stop=length,
+        if any(char in file for char in '*?[]'):
+            filelist.extend(glob.iglob(file))
+        else:
+            filelist.append(file)
+
+    # Read the time column first
+    length = file_length(filelist[0]) - 1
+    timedata = read_plumed(filelist[0], step=step, stop=length,
+                           replicas=True, columns=(0,), dataframe=True)
+
+    # Append all other columns
+    for file in sorted(filelist):
+        data = read_plumed(file, step=step, stop=length,
                            replicas=True, dataframe=True)
         timedata = pd.concat([timedata, pd.DataFrame(data.iloc[:, 1])], axis=1)
     return timedata.dropna(axis=0)
