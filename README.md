@@ -1,8 +1,6 @@
 Plumology
 =========
 
-Plumology is a python library of tools and utilities to analyse the output from biased molecular dynamics simulations.
-
 Plumology allows the analysis of biased molecular dynamics data, in particular output from PLUMED. It features:
 - Reading plumed output files
 - Creating weighted probability distributions, WHAM
@@ -13,6 +11,10 @@ Plumology allows the analysis of biased molecular dynamics data, in particular o
 - Comparing data from different simulations
 - Calculating experimental data RMSDs
 - A diverse set of flexible plotting routines
+
+Dependencies
+------------
+The recommended python distribution is anaconda with python 3.5. Python 2.x is not supported.
 
 Install
 -------
