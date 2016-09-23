@@ -197,11 +197,10 @@ def read_plumed(
         # the replica data (worst case only one!). So we read in chunks
         # the size of the number of replicas.
         if replicas:
-            dfgs = []
-            for i, (_, dfg) in enumerate(df.groupby('time')):
-                if i % step == 0:
-                    dfgs.append(dfg)
-            data = pd.concat(dfgs)
+            data = pd.concat([
+                dfg for i, (_, dfg) in enumerate(df.groupby('time'))
+                if i % step == 0
+            ])
         else:
             data = df[::step]
 
