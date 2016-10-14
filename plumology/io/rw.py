@@ -226,8 +226,9 @@ def read_plumed(
 
 def read_multi(
     files: Union[Sequence[str], str],
+    ret: str='horizontal',
     **kwargs: Optional[Mapping[str, Any]]
-) -> pd.DataFrame:
+) -> Union[pd.DataFrame, List[pd.DataFrame]]:
     '''
     Read multiple Plumed files and return as concatenated dataframe.
 
@@ -258,11 +259,33 @@ def read_multi(
     dflist = []  # type: List[str]
     for i, file in enumerate(filelist):
         df = read_plumed(file, **kwargs)
-        dflist.append(df.rename(columns={
-            k: '{0}_{1}'.format(i, k) for k in df.columns if 'time' not in k
-        }))
 
-    return pd.concat(dflist, axis=1)
+        # Horizontal concatenation requires unique column names
+        if ret.startswith('h'):
+            dflist.append(df.rename(columns={
+                k: '{0}_{1}'.format(i, k) for k in df.columns
+                if 'time' not in k
+            }))
+        else:
+            dflist.append(df)
+
+    # Horizontal
+    if ret.startswith('h'):
+        data = pd.concat(dflist, axis=1)
+
+    # Vertical
+    elif ret.startswith('v'):
+        data = pd.concat(dflist, axis=0)
+
+    # Just get a list of dataframes
+    elif ret.startswith('l'):
+        data = dflist
+
+    # Average over all dataframes
+    elif ret.startswith('m'):
+        data = pd.concat(dflist).groupby(level=0).mean()
+
+    return data
 
 
 def field_glob(
