@@ -235,6 +235,11 @@ def read_multi(
     Parameters
     ----------
     files : Sequence of (globbed) files to be read.
+    ret : { 'horizontal', 'vertical', 'list', 'mean' }
+        Type of dataframe to return. With default horizontal concatenation,
+        columns get sequentially modified names. 'vertical' simply elongates
+        the dataframe, 'list' just returns a list of individual dataframes.
+        'mean' computes the per cell average of all read files.
     kwargs : Arguments passed to read_plumed().
 
     Returns
