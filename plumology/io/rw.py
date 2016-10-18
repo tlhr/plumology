@@ -58,6 +58,24 @@ def is_same_shape(data: List[np.ndarray]) -> bool:
     return len(set(d.shape for d in data)) == 1
 
 
+def _offbyone_check(num1: int, num2: int) -> bool:
+    '''
+    Check if two integers are the same by a margin of one.
+
+    Parameters
+    ----------
+    num1 : First number
+    num2 : Second number
+
+    Returns
+    -------
+    offbyone : True if numbers are the same
+        with offset of one, False otherwise.
+
+    '''
+    return (num1 == num2 or num1 + 1 == num2 or num1 - 1 == num2)
+
+
 def read_plumed_fields(file: str) -> List[str]:
     '''
     Reads the fields specified in the plumed file.
@@ -522,16 +540,23 @@ def read_nmr(
     posatoms = ['nh', 'hn', 'ha', 'ca', 'cb', 'co']
 
     # Check input
-    if len(spfiles) != len(weights):
-        raise ValueError(
-                'Number of SPARTA+ files must be the same '
-                'as the length of the weight array!'
-        )
+    if not _offbyone_check(len(spfiles), len(weights)):
+        err = (
+            'Number of SPARTA+ files ({0}) must be the same '
+            'as the length of the weight array ({1})!'
+        ).format(len(spfiles), len(weights))
+        raise ValueError(err)
+
+    # Avoid stupid off-by-one errors
+    breakpoint = len(weights) if len(spfiles) > len(weights) else len(spfiles)
 
     # Iterate over files
     shifts = {}  # type: Dict[str, float]
     for i, file in enumerate(spfiles):
         with open(file, 'r') as sf:
+
+            if i == breakpoint:
+                break
 
             # Only use lines starting with digits
             for line in sf.readlines():
