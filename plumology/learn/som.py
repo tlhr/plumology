@@ -295,7 +295,7 @@ class SOM:
             self._batch_train(X)
         self._trained = True
 
-    def index(self, X: np.ndarray) -> None:
+    def create_index(self, X: np.ndarray) -> None:
         '''
         Create an index grid, allowing the coloring of the map with arbitrary
         feature data. For instance, one could train the SOM on a subset of the
@@ -315,7 +315,7 @@ class SOM:
 
         # For each node we calculate the distance to each datapoint
         for index in np.ndindex(self._shape):
-            self.index[index] = self._dist(X, index=index, axis=1)
+            self.index[index] = self._dist(X, index=index, axis=1).argmin()
 
     def transform(self, X: np.ndarray) -> np.ndarray:
         '''
