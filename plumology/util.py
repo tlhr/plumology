@@ -357,7 +357,8 @@ def dist1D(
     ret: str='both',
     nbins: int=50,
     weight_name: Optional[str]=None,
-    ignore: List[str]=['time']
+    ignore: List[str]=['time'],
+    normed: bool=True
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     '''
@@ -369,6 +370,7 @@ def dist1D(
     nbins : Number of bins to use for the histogram.
     weight_name : Name of the weight column.
     ignore : List of column names to ignore.
+    normed : Normalize the histograms.
 
     Returns
     -------
@@ -403,10 +405,10 @@ def dist1D(
             continue
 
         if weight_name is not None:
-            dist, _, _ = binned_statistic(data_col, data_ww,
-                                          statistic='sum', bins=nbins)
+            dist, _ = np.histogram(data_col, weights=data_ww,
+                                   bins=nbins, normed=normed)
         else:
-            dist, _ = np.histogram(data_col, bins=nbins)
+            dist, _ = np.histogram(data_col, bins=nbins, normed=normed)
 
         # edges created by scipy are not usable
         dist_range = np.linspace(data_col.min(), data_col.max(), nbins)
