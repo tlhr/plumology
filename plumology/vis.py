@@ -79,12 +79,12 @@ def fast(filename: str,
             ax.set_ylabel(col)
 
 
-def hex(
-    ax: plt.Axes,
-    grid: np.ndarray,
-    data: np.ndarray,
-    hex_size: float=11.5,
-    cmap: str='viridis'
+def hexplot(
+        ax: plt.Axes,
+        grid: np.ndarray,
+        data: np.ndarray,
+        hex_size: float=11.5,
+        cmap: str='viridis'
 ) -> plt.Axes:
     '''
     Plot grid and data on a hexagon grid. Useful for SOMs.
@@ -257,12 +257,12 @@ def histogram(cvdata: pd.DataFrame,
 
 
 def convergence(
-    hills: pd.DataFrame,
-    summed_hills: pd.DataFrame,
-    time: int,
-    kbt: float,
-    factor: float=1.0,
-    constant: float=0.0
+        hills: pd.DataFrame,
+        summed_hills: pd.DataFrame,
+        time: int,
+        kbt: float,
+        factor: float=1.0,
+        constant: float=0.0
 ) -> plt.Figure:
     '''
     Estimate convergence by comparing CV histograms and sum_hills output.
@@ -549,7 +549,7 @@ def interactive(file: str,
             'Interactive plotting requires Bokeh to be installed'
         )
 
-    cols = [x] + y if type(y) == list else [x] + [y]
+    cols = [x] + y if isinstance(y, list) else [x] + [y]
     fields, data = read_plumed(
         file,
         step=step,

@@ -13,11 +13,11 @@ __all__ = ['plumed_to_h5', 'plumed_to_hdf', 'hdf_to_dataframe']
 
 
 def plumed_to_hdf(
-    files: Union[List[str], str],
-    hdf_file: str,
-    keys: Union[List[str], str],
-    field_map: Optional[Mapping[str, str]]=None,
-    columnwise: bool=False,
+        files: Union[List[str], str],
+        hdf_file: str,
+        keys: Union[List[str], str],
+        field_map: Optional[Mapping[str, str]]=None,
+        columnwise: bool=False,
 ) -> None:
     '''
     Read PLUMED files and dump to HDF5.
@@ -34,9 +34,9 @@ def plumed_to_hdf(
     '''
 
     # Check input
-    if type(files) != list:
+    if isinstance(files, list):
         files = [files]
-    if type(keys) != list:
+    if isinstance(keys, list):
         keys = [keys]
     if len(keys) != len(files):
         raise ValueError(
@@ -67,7 +67,7 @@ def plumed_to_hdf(
                         header=None,
                         comment='#',
                         names=fields,
-                        sep='\s+',
+                        sep=r'\s+',
                         dtype=np.float64,
                         usecols=[field]
                     ).values.flatten()
@@ -82,7 +82,7 @@ def plumed_to_hdf(
                     header=None,
                     comment='#',
                     names=fields,
-                    sep='\s+',
+                    sep=r'\s+',
                     dtype=np.float64,
                     usecols=fields
                 )
@@ -94,13 +94,13 @@ def plumed_to_hdf(
 
 
 def hdf_to_dataframe(
-    hdf_file: str,
-    reduce: Optional[int]=None,
-    aggregator: Optional[Callable[[np.ndarray], float]]=None,
-    weight: bool=True,
-    reshape: bool=True,
-    grouper: str='ff',
-    weight_name: str='ww'
+        hdf_file: str,
+        reduce: Optional[int]=None,
+        aggregator: Optional[Callable[[np.ndarray], float]]=None,
+        weight: bool=True,
+        reshape: bool=True,
+        grouper: str='ff',
+        weight_name: str='ww'
 ) -> pd.DataFrame:
     '''
     Read HDF file to dataframe and reduce number of datapoints.
@@ -165,7 +165,7 @@ def hdf_to_dataframe(
     if reshape:
         # Unique columns for wide_to_long
         cols = list({v.rstrip('0123456789') for v in raw_frame.columns
-                    if v not in ['time', grouper, weight_name]})
+                     if v not in ['time', grouper, weight_name]})
 
         # Move residue number to index
         index = 'time' if reduce is not None else grouper
@@ -187,13 +187,14 @@ def hdf_to_dataframe(
 
 
 def plumed_to_h5(
-    files: Union[str, List[str]],
-    hdf_file: str,
-    func: Union[List[Callable[[pd.DataFrame], pd.DataFrame]],
-                Callable[[pd.DataFrame], pd.DataFrame], None]=None,
-    chunksize: int=10000,
-    verbose: bool=True,
-    kwargs: Union[Mapping[str, Any], Sequence[Mapping[str, Any]], None]=None
+        files: Union[str, List[str]],
+        hdf_file: str,
+        func: Union[List[Callable[[pd.DataFrame], pd.DataFrame]],
+                    Callable[[pd.DataFrame], pd.DataFrame], None]=None,
+        chunksize: int=10000,
+        verbose: bool=True,
+        kwargs: Union[Mapping[str, Any],
+                      Sequence[Mapping[str, Any]], None]=None
 ) -> None:
     '''
     Read PLUMED files and dump to pytables HDF5.
@@ -209,11 +210,11 @@ def plumed_to_h5(
     '''
 
     # Check input
-    if type(files) != list:
+    if isinstance(files, list):
         files = [files]
-    if type(func) != list:
+    if isinstance(func, list):
         func = [func]
-    if type(kwargs) != list:
+    if isinstance(kwargs, list):
         kwargs = [kwargs]
     if func[0] is not None and len(func) != len(files):
         raise ValueError(
@@ -231,7 +232,7 @@ def plumed_to_h5(
             header=None,
             comment='#',
             names=fields,
-            sep='\s+',
+            sep=r'\s+',
             chunksize=chunksize,
             dtype=np.float64
         )

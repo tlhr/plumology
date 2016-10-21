@@ -73,19 +73,19 @@ class SOM:
 
     '''
     def __init__(
-        self,
-        nx: int,
-        ny: int,
-        ndims: int,
-        iterations: int,
-        learning_rate: float=0.5,
-        distance: str='euclid',
-        init: str='random',
-        grid: str='rect',
-        train: str='seq',
-        neighbour: str='gaussian',
-        learning: str='exp',
-        seed: Optional[int]=None
+            self,
+            nx: int,
+            ny: int,
+            ndims: int,
+            iterations: int,
+            learning_rate: float=0.5,
+            distance: str='euclid',
+            init: str='random',
+            grid: str='rect',
+            train: str='seq',
+            neighbour: str='gaussian',
+            learning: str='exp',
+            seed: Optional[int]=None
     ) -> None:
 
         self._iterations = iterations
@@ -132,8 +132,8 @@ class SOM:
             self._locY = self._Y
         elif grid.startswith('h'):
             self._locX = np.asarray([
-                    x + 0.5 if i % 2 == 0 else x
-                    for i, x in enumerate(self._X.astype(float))
+                x + 0.5 if i % 2 == 0 else x
+                for i, x in enumerate(self._X.astype(float))
             ])
             self._locY = self._Y * 0.33333
         else:
@@ -211,21 +211,21 @@ class SOM:
     def _lr_lin(self, t: int) -> float:
         return (self._init_learning_rate -
                 (self._init_learning_rate * t * (np.exp(1) - 1) /
-                    (self._iterations * np.exp(1))))
+                 (self._iterations * np.exp(1))))
 
     def _euclid_dist(
-        self,
-        xmat: np.ndarray,
-        index: Tuple[int, int]=(),
-        axis: int=2
+            self,
+            xmat: np.ndarray,
+            index: Tuple[int, int]=(),
+            axis: int=2
     ) -> np.ndarray:
         return np.sqrt(((xmat - self.weights[index]) ** 2).sum(axis=axis))
 
     def _periodic_dist(
-        self,
-        xmat: np.ndarray,
-        index: Tuple[int, int]=(),
-        axis: int=2
+            self,
+            xmat: np.ndarray,
+            index: Tuple[int, int]=(),
+            axis: int=2
     ) -> np.ndarray:
         pi2 = np.pi * 2
         dx = (xmat - self.weights[index]) / pi2

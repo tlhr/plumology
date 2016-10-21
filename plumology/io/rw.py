@@ -73,7 +73,7 @@ def _offbyone_check(num1: int, num2: int) -> bool:
         with offset of one, False otherwise.
 
     '''
-    return (num1 == num2 or num1 + 1 == num2 or num1 - 1 == num2)
+    return num1 == num2 or num1 + 1 == num2 or num1 - 1 == num2
 
 
 def read_plumed_fields(file: str) -> List[str]:
@@ -146,16 +146,16 @@ def file_length(file: str, skip_comments: bool=False) -> int:
 
 
 def read_plumed(
-    file: str,
-    columns: Union[Sequence[int], Sequence[str], str, None]=None,
-    step: int=1,
-    start: int=0,
-    stop: int=sys.maxsize,
-    replicas: bool=False,
-    high_mem: bool=True,
-    dataframe: bool=True,
-    raise_error: bool=False,
-    drop_nan: bool=True
+        file: str,
+        columns: Union[Sequence[int], Sequence[str], str, None]=None,
+        step: int=1,
+        start: int=0,
+        stop: int=sys.maxsize,
+        replicas: bool=False,
+        high_mem: bool=True,
+        dataframe: bool=True,
+        raise_error: bool=False,
+        drop_nan: bool=True
 ) -> Union[pd.DataFrame, Tuple[List[str], np.ndarray]]:
     '''
     Read a plumed file and return its contents as a 2D ndarray.
@@ -200,7 +200,7 @@ def read_plumed(
 
         df = pd.read_csv(
             file,
-            sep='\s+',
+            sep=r'\s+',
             header=None,
             comment='#',
             names=full_fields,
@@ -243,9 +243,9 @@ def read_plumed(
 
 
 def read_multi(
-    files: Union[Sequence[str], str],
-    ret: str='horizontal',
-    **kwargs: Optional[Mapping[str, Any]]
+        files: Union[Sequence[str], str],
+        ret: str='horizontal',
+        **kwargs: Optional[Mapping[str, Any]]
 ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
     '''
     Read multiple Plumed files and return as concatenated dataframe.
@@ -312,8 +312,8 @@ def read_multi(
 
 
 def field_glob(
-    fields: Union[str, Sequence[str]],
-    full_fields: Sequence[str]
+        fields: Union[str, Sequence[str]],
+        full_fields: Sequence[str]
 ) -> List[str]:
     '''
     Gets a list of matching fields from valid regular expressions.
@@ -345,8 +345,8 @@ def field_glob(
 
 
 def fields_to_columns(
-    fields: Union[Sequence[str], Sequence[int]],
-    full_fields: Sequence[str]
+        fields: Union[Sequence[str], Sequence[int]],
+        full_fields: Sequence[str]
 ) -> Tuple[Tuple[str, ...], Tuple[int, ...]]:
     '''
     Transforms a sequence of field names to their respective column indices.
@@ -365,7 +365,7 @@ def fields_to_columns(
     if fields is None:
         return tuple(full_fields), None
 
-    elif type(fields[0]) == int:
+    elif isinstance(fields[0], int):
         return tuple(full_fields[i] for i in fields), tuple(fields)
 
     else:
@@ -405,10 +405,10 @@ def read_all_hills(files: Union[Sequence[str], str],
             raw.append(read_plumed(file, step=step))
 
         return (pd.concat(raw)
-                  .sort_values('time')
-                  .dropna(axis=0)
-                  .sort_index()
-                  .drop('pb.bias', axis=1))
+                .sort_values('time')
+                .dropna(axis=0)
+                .sort_index()
+                .drop('pb.bias', axis=1))
 
     else:
         # Read the time column first
@@ -513,7 +513,6 @@ def read_nmr(
         weights: np.ndarray,
         directory: str,
         nfiles: int,
-        skip: int,
         nres: int
 ) -> Dict[str, float]:
     '''

@@ -14,7 +14,7 @@ from typing import (Any, Sequence, List, Tuple, Dict,
 import h5py
 import numpy as np
 import pandas as pd
-from scipy.stats import binned_statistic_2d, binned_statistic, entropy
+from scipy.stats import binned_statistic_2d, entropy
 
 from .io import read_nmr, read_rdc
 
@@ -64,11 +64,11 @@ def _typecheck(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
 
 
 def population(
-    data: pd.DataFrame,
-    minima: Sequence[Tuple[float, float]],
-    radius: float=2.0,
-    weight_name: Optional[str]=None,
-    cv_names: Tuple[str, str]=('cv1', 'cv2')
+        data: pd.DataFrame,
+        minima: Sequence[Tuple[float, float]],
+        radius: float=2.0,
+        weight_name: Optional[str]=None,
+        cv_names: Tuple[str, str]=('cv1', 'cv2')
 ) -> Dict[Tuple[float, float], float]:
     '''
     Calculate the population on a 2D free energy surface by summing up weights.
@@ -143,13 +143,13 @@ def stats(fields: Sequence[str], data: np.ndarray) -> Sequence[str]:
     return [
         ('{:16} min = {:>10.4f} :: max = {:>10.4f} :: mean = {:>10.4f} '
          ':: stddev = {:>10.4f} :: var = {:>10.4f}').format(
-            fi,
-            min(data[:, i]),
-            max(data[:, i]),
-            np.mean(data[:, i]),
-            np.std(data[:, i]),
-            np.var(data[:, i])
-        ) for i, fi in enumerate(fields)
+             fi,
+             min(data[:, i]),
+             max(data[:, i]),
+             np.mean(data[:, i]),
+             np.std(data[:, i]),
+             np.var(data[:, i])
+             ) for i, fi in enumerate(fields)
     ]
 
 
@@ -210,9 +210,9 @@ def last_nonzero(data: pd.DataFrame) -> pd.Series:
 
 
 def calc_bse(
-    data: pd.DataFrame,
-    weight_name: Optional[str]=None,
-    ignore: List[str]=['time']
+        data: pd.DataFrame,
+        weight_name: Optional[str]=None,
+        ignore: List[str]=None
 ) -> pd.DataFrame:
     '''
     Calculate the Block Standard Error (BSE).
@@ -233,6 +233,8 @@ def calc_bse(
     data. The Journal of Chemical Physics, 91(1), 461 (1989)
 
     '''
+    if ignore is None:
+        ignore = ['time']
 
     # Prepare input, first element
     if weight_name is not None:
@@ -284,7 +286,7 @@ def calc_wham(bias: Union[str, np.ndarray],
 
     '''
     # Check and load input
-    if type(bias) == str:
+    if isinstance(bias, str):
         data = np.loadtxt(bias, usecols=(-1,))
     else:
         data = bias
@@ -295,7 +297,7 @@ def calc_wham(bias: Union[str, np.ndarray],
     expv = np.exp((data.min() - data) / kbt)
 
     # Iterate until convergence
-    for i in range(nwham):
+    for _ in range(nwham):
         z_prev = z
         weights = z / expv
         norm = sum(weights)
@@ -353,12 +355,12 @@ def calc_entropy(data: pd.DataFrame,
 
 
 def dist1D(
-    data: Union[pd.DataFrame, h5py.Group],
-    ret: str='both',
-    nbins: int=50,
-    weight_name: Optional[str]=None,
-    ignore: List[str]=['time'],
-    normed: bool=True
+        data: Union[pd.DataFrame, h5py.Group],
+        ret: str='both',
+        nbins: int=50,
+        weight_name: Optional[str]=None,
+        ignore: List[str]=None,
+        normed: bool=True
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     '''
@@ -377,6 +379,9 @@ def dist1D(
     dist1D : Probability distribution as Dataframe.
 
     '''
+    if ignore is None:
+        ignore = ['time']
+
     # Check return option
     if not any(ret.startswith(s) for s in ['b', 'd', 'r', 'e']):
         raise ValueError(
@@ -427,7 +432,7 @@ def dist2D(data: Union[pd.DataFrame, h5py.Group],
            cvs: Union[Tuple[str, str], List[Tuple[str, str]], None]=None,
            nbins: int=50,
            weight_name: str='ww',
-           ignore: List[str]=['time']) -> pd.DataFrame:
+           ignore: List[str]=None) -> pd.DataFrame:
     '''
     Create a 2D weighted probability distribution.
 
@@ -445,6 +450,9 @@ def dist2D(data: Union[pd.DataFrame, h5py.Group],
 
     '''
 
+    if ignore is None:
+        ignore = ['time']
+
     # Get possible keys (HDF or dataframe)
     if isinstance(data, h5py.Group):
         cols = data.keys()
@@ -456,7 +464,7 @@ def dist2D(data: Union[pd.DataFrame, h5py.Group],
         combs = list(itertools.combinations(
             (c for c in cols if c not in ignore + [weight_name]), 2
         ))
-    elif type(cvs) == list:
+    elif isinstance(cvs, list):
         combs = cvs
     else:
         combs = [cvs]
@@ -499,8 +507,7 @@ def free_energy(dist: pd.DataFrame, kbt: float) -> pd.DataFrame:
                          if p != 0 else float('inf'))
 
 
-def calc_sqdev(data: pd.DataFrame,
-               grouper: Optional[str]='ff') -> pd.DataFrame:
+def calc_sqdev(data: pd.DataFrame) -> pd.DataFrame:
     '''
     Calculate the Squared-Deviation per residue.
 
@@ -520,7 +527,7 @@ def calc_sqdev(data: pd.DataFrame,
     af = data.drop([c for c in data.columns if 'exp' in c], axis=1)
 
     # return sqdev dataframe
-    return ((af - ef) ** 2)
+    return (af - ef) ** 2
 
 
 def calc_rmsd(data: pd.DataFrame,
@@ -537,9 +544,9 @@ def calc_rmsd(data: pd.DataFrame,
     rmsd : Force field indexed dataframe
 
     '''
-    return (calc_sqdev(data, grouper=grouper).groupby(level=[grouper])
-                                             .agg(lambda x: np.mean(x))
-                                             .apply(np.sqrt))
+    return (calc_sqdev(data).groupby(level=[grouper])
+            .agg(np.mean)
+            .apply(np.sqrt))
 
 
 def calc_rdc(executable: str,
@@ -587,8 +594,8 @@ def calc_nmr(executable: str,
              weights: Union[str, np.ndarray],
              trajectory_file: str,
              runtime_file: str,
-             skip: int=50,
-             nres: int=9) -> Dict[str, float]:
+             nres: int,
+             skip: int=50) -> Dict[str, float]:
     '''
     Calculate chemical shifts using an external program.
 
@@ -609,9 +616,9 @@ def calc_nmr(executable: str,
     '''
 
     # Check and read input
-    if type(weights) == str:
+    if isinstance(weights, str):
         weight = pd.read_csv(
-            weights, sep='\s+', header=None, comment='#',
+            weights, sep=r'\s+', header=None, comment='#',
             names=['ww'], dtype=np.float64, skiprows=1
         ).values[::skip]
     else:
@@ -642,6 +649,6 @@ def calc_nmr(executable: str,
 
         # Parse data
         nfiles = len(glob.glob1(tmp, '*pred.tab'))
-        nmr = read_nmr(wn, tmp, nfiles, skip, nres)
+        nmr = read_nmr(wn, tmp, nfiles, nres)
 
     return nmr
