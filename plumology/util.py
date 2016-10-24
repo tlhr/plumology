@@ -415,9 +415,9 @@ def dist1D(
 
         if weight_name is not None:
             dist, _ = np.histogram(data_col, weights=data_ww,
-                                   bins=nbins, normed=normed)
+                                   bins=nbins, density=normed)
         else:
-            dist, _ = np.histogram(data_col, bins=nbins, normed=normed)
+            dist, _ = np.histogram(data_col, bins=nbins, density=normed)
 
         # edges created by scipy are not usable
         dist_range = np.linspace(data_col.min(), data_col.max(), nbins)
