@@ -346,6 +346,10 @@ def calc_entropy(data: pd.DataFrame,
             elif kind == 'shannon':
                 M = 0.5 * (data_a[col] + data_b[col])
                 S = 0.5 * (entropy(data_a[col], M) + entropy(data_b[col], M))
+            elif kind == 'hellinger':
+                S = (1 / np.sqrt(2) *
+                     np.sqrt(((np.sqrt(data_a[col]) -
+                               np.sqrt(data_b[col])) ** 2).sum()))
             kl.append(pd.Series(
                 {'{0}-{1}'.format(k1, k2): S},
                 name=col
