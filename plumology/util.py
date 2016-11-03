@@ -326,6 +326,13 @@ def calc_entropy(data: pd.DataFrame,
     kld : Dataframe of length 1 with the calculated values.
 
     '''
+    # Check input
+    valid_kinds = ['kl', 'kls', 'shannon', 'js', 'hellinger']
+    if kind not in valid_kinds:
+        e = ('\'{0}\' is not a valid type!'
+             'Valid types: {1}').format(kind, valid_kinds)
+        raise ValueError(e)
+
     if isinstance(keys, list):
         keylist = keys
     else:
