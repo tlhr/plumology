@@ -13,7 +13,7 @@ from .util import stats, chunk_range, free_energy
 from .util import dist1D as calc_dist1D
 from .io import read_multi, read_plumed
 
-__all__ = ['fast', 'dist1D', 'dist2D', 'hex', 'histogram', 'dihedral',
+__all__ = ['fast', 'dist1D', 'dist2D', 'hexplot', 'histogram', 'dihedral',
            'history', 'interactive', 'metai', 'rmsd', 'convergence']
 
 
@@ -206,8 +206,7 @@ def histogram(cvdata: pd.DataFrame,
               cv_max: Optional[Sequence[float]]=None,
               time: Optional[float]=None,
               nchunks: int=3,
-              nbins: int=50,
-              debug: bool=False) -> None:
+              nbins: int=50) -> None:
     '''
     Plots histograms of CVs in predefined chunks.
 
@@ -230,13 +229,9 @@ def histogram(cvdata: pd.DataFrame,
     chunks = chunk_range(cvdata['time'].values[0],
                          cvdata['time'].values[-2],
                          nchunks, time)
-    if debug:
-        print('Chunks: {0}'.format(chunks))
 
     fig = plt.figure(figsize=(16, 3 * len(cvdata.columns)))
     for i, col in enumerate(cvdata.columns):
-        if debug:
-            print('Processing {0}'.format(col))
         if col == 'time':
             continue
         for j, time in enumerate(chunks):
@@ -248,8 +243,6 @@ def histogram(cvdata: pd.DataFrame,
                                       bins=nbins, normed=False)
             center = (bins[:-1] + bins[1:]) / 2
             width = (abs(cv_min[i - 1]) + abs(cv_max[i - 1])) / nbins
-            if debug:
-                print('Plotting {0}'.format(col))
             ax.bar(center, hist, width=width, align='center')
             ax.set_xlabel(col)
             ax.set_xlim(cv_min[i - 1], cv_max[i - 1])
