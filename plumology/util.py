@@ -329,7 +329,7 @@ def calc_entropy(data: pd.DataFrame,
     # Check input
     valid_kinds = ['kl', 'kls', 'shannon', 'js', 'hellinger']
     if kind not in valid_kinds:
-        e = ('\'{0}\' is not a valid type!'
+        e = ('\'{0}\' is not a valid entropy kind!'
              'Valid types: {1}').format(kind, valid_kinds)
         raise ValueError(e)
 
