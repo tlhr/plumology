@@ -14,7 +14,7 @@ from typing import (Any, Sequence, List, Tuple, Dict,
 import h5py
 import numpy as np
 import pandas as pd
-from scipy.stats import binned_statistic_2d, entropy
+from scipy.stats import entropy
 
 from .io import read_nmr, read_rdc
 
