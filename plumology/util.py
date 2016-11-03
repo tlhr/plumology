@@ -371,7 +371,7 @@ def dist1D(
         nbins: int=50,
         weight_name: Optional[str]=None,
         ignore: List[str]=None,
-        normed: bool=True
+        normed: bool=False
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     '''
@@ -442,8 +442,9 @@ def dist1D(
 def dist2D(data: Union[pd.DataFrame, h5py.Group],
            cvs: Union[Tuple[str, str], List[Tuple[str, str]], None]=None,
            nbins: int=50,
-           weight_name: str='ww',
-           ignore: List[str]=None) -> pd.DataFrame:
+           weight_name: Optional[str]=None,
+           ignore: List[str]=None,
+           normed: bool=False) -> pd.DataFrame:
     '''
     Create a 2D weighted probability distribution.
 
@@ -483,13 +484,21 @@ def dist2D(data: Union[pd.DataFrame, h5py.Group],
     # Create 2D histograms and stack them to form a panel
     dists = []
     for cv1, cv2 in combs:
-        H, e1, e2, bins = binned_statistic_2d(
-            data[cv1][::],
-            data[cv2][::],
-            data[weight_name][::],
-            bins=nbins,
-            statistic='sum'
-        )
+        if weight_name is not None:
+            H, _, _ = np.histogram2d(
+                data[cv1][::],
+                data[cv2][::],
+                bins=nbins,
+                normed=normed,
+                weights=data[weight_name][::]
+            )
+        else:
+            H, _, _ = np.histogram2d(
+                data[cv1][::],
+                data[cv2][::],
+                bins=nbins,
+                normed=normed
+            )
 
         dists.append(pd.DataFrame(H).stack())
 
