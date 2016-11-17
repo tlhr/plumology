@@ -34,9 +34,9 @@ def plumed_to_hdf(
     '''
 
     # Check input
-    if isinstance(files, list):
+    if not isinstance(files, list):
         files = [files]
-    if isinstance(keys, list):
+    if not isinstance(keys, list):
         keys = [keys]
     if len(keys) != len(files):
         raise ValueError(
