@@ -18,6 +18,7 @@ def plumed_to_hdf(
         keys: Union[List[str], str],
         field_map: Optional[Mapping[str, str]]=None,
         columnwise: bool=False,
+        overwrite: bool=False,
 ) -> None:
     '''
     Read PLUMED files and dump to HDF5.
@@ -30,6 +31,7 @@ def plumed_to_hdf(
     field_map : Mapping to replace potentially bad names for fields.
     columnwise : Operate on columns instead of whole files,
         this is easier on memory, but far slower.
+    overwrite : Overwrite an existing file, or just append.
 
     '''
 
@@ -42,8 +44,9 @@ def plumed_to_hdf(
         raise ValueError(
             'You must supply the same number of callables as files!'
         )
+    fmode = 'w' if overwrite else 'a'
 
-    with h5py.File(hdf_file, 'w') as store:
+    with h5py.File(hdf_file, fmode) as store:
 
         for key, file in zip(keys, files):
 

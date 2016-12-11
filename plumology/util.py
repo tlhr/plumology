@@ -85,6 +85,14 @@ def population(
     population : Dictionary containing percentages mapped to minima.
 
     '''
+    if any(cv not in data.columns for cv in cv_names):
+        raise KeyError('cv_names not found in dataframe!')
+
+    # Just count up if weight is not given
+    if weight_name is None:
+        weight_name = 'ww'
+        data[weight_name] = 1
+
     pops = {}
     for coords in minima:
         p = sum(data[(data[cv_names[0]] > (coords[0] - radius)) &
@@ -95,8 +103,13 @@ def population(
     return pops
 
 
-def clip(data: pd.DataFrame, ranges: Mapping[str, Tuple[float, float]],
-         ignore: Sequence[str]=['ww'], renormalize: bool=True) -> pd.DataFrame:
+def clip(
+        data: pd.DataFrame,
+        ranges: Mapping[str, Tuple[float, float]],
+        ignore: Sequence[str]=None,
+        weight_name: Optional[str]=None,
+        renormalize: bool=True
+) -> pd.DataFrame:
     '''
     Clip a dataset to a fixed range, discarding other datapoints.
 
@@ -112,19 +125,24 @@ def clip(data: pd.DataFrame, ranges: Mapping[str, Tuple[float, float]],
     data : Clipped data
 
     '''
+    if ignore is None:
+        ignore = [weight_name]
+    else:
+        ignore.append(weight_name)
+
     for col in data.columns:
         if col in ignore:
             continue
         data = (data[(data[col] > ranges[col][0]) &
                      (data[col] < ranges[col][1])])
 
-    if renormalize:
-        data['ww'] /= data['ww'].sum()
+    if renormalize and weight_name is not None:
+        data[weight_name] /= data[weight_name].sum()
 
     return data
 
 
-def stats(fields: Sequence[str], data: np.ndarray) -> Sequence[str]:
+def stats(fields: Sequence[str], data: np.ndarray) -> List[str]:
     '''
     Calculate statistical properties of dataset and format them nicely.
 
@@ -173,8 +191,13 @@ def chunk_range(chunk_min: float,
     chunks : List of chunk areas.
 
     '''
+    if chunk_max <= chunk_min:
+        raise ValueError('chunk_max must be larger than chunk_min!')
+    elif nchunks <= 0:
+        raise ValueError('nchunks can not be smaller than 0!')
+
     if first_chunk_size is not None:
-        chunk = first_chunk_size
+        chunk = first_chunk_size + chunk_min
         chunks = [chunk]
         nchunks -= 1
     else:
@@ -205,8 +228,34 @@ def last_nonzero(data: pd.DataFrame) -> pd.Series:
     '''
     nonzero = {}
     for col in data.columns:
-        nonzero[col] = data[col][data[col] > 0.000].iloc[-1]
+        nonzero[col] = data[col][(data[col] > 0.000) |
+                                 (data[col] < 0.000)].iloc[-1]
     return pd.Series(nonzero)
+
+
+def dict_to_dataframe(
+        data: Dict[str, pd.DataFrame],
+        grouper: str='ff'
+) -> pd.DataFrame:
+    '''
+    Convert a dictionary of dataframes to a multiindexed dataframe.
+
+    Parameters
+    ----------
+    data : Dict of dataframes.
+    grouper : Name of the new multiindex.
+
+    Returns
+    -------
+    data : Multiindexed dataframe.
+
+    '''
+    dfs = []
+    for key, df in data.items():
+        df[grouper] = key
+        dfs.append(df)
+
+    return pd.concat(dfs).set_index(grouper, append=True).sort_index()
 
 
 def calc_bse(
@@ -234,7 +283,9 @@ def calc_bse(
 
     '''
     if ignore is None:
-        ignore = ['time']
+        ignore = []
+    if 'time' not in ignore:
+        ignore.append('time')
 
     # Prepare input, first element
     if weight_name is not None:
