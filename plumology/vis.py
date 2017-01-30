@@ -497,8 +497,7 @@ def metai(file: str,
 
     name = data.columns[1].split('.')[0]
     for j in range(sc):
-        kappa = 1 / ((data[name + '.sigmaMean_' + str(j)] *
-                      data[name + '.rewSigmaMean']) ** 2 +
+        kappa = 1 / (data[name + '.sigmaMean_' + str(j)] ** 2 +
                      data[name + '.sigma_' + str(j)] ** 2)
         ax_kappa.plot(data['time'], kappa, label=j)
 
