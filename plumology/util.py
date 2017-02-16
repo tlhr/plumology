@@ -228,8 +228,8 @@ def last_nonzero(data: pd.DataFrame) -> pd.Series:
     '''
     nonzero = {}
     for col in data.columns:
-        nonzero[col] = data[col][(data[col] > 0.000) |
-                                 (data[col] < 0.000)].iloc[-1]
+        vals = data[col][(data[col] > 0.000) | (data[col] < 0.000)]
+        nonzero[col] = vals.iloc[-1] if vals.size > 0 else 0.0
     return pd.Series(nonzero)
 
 

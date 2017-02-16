@@ -110,6 +110,13 @@ class Test_last_nonzero:
         assert (util.last_nonzero(ndata).values ==
                 np.array([-0.2, 0.5, 0.4])).all()
 
+    def test_3(self):
+        ndata = data.copy()
+        ndata.iloc[2, 1] = 0
+        ndata['c'] = 0.0
+        assert (util.last_nonzero(ndata).values ==
+                np.array([-0.2, 0.5, 0.0])).all()
+
 
 class Test_dict_to_dataframe:
     def test_1(self):
