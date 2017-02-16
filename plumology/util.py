@@ -258,6 +258,31 @@ def dict_to_dataframe(
     return pd.concat(dfs).set_index(grouper, append=True).sort_index()
 
 
+def sum_rows(
+        df: pd.DataFrame,
+        names: Mapping[str, Sequence[str]]
+) -> pd.DataFrame:
+    '''
+    Sum specified rows in a dataframe under a new name.
+
+    Parameters
+    ----------
+    df : Dataframe with rows to be summed.
+    names : Dictionary of lists with row names to be summed.
+
+    Returns
+    -------
+    df : Dataframe with summed rows.
+
+    '''
+    for new_name, old_names in names.items():
+        summed_rows = df.loc[old_names].sum()
+        newframe = df.drop(old_names)
+        newframe.loc[new_name] = summed_rows
+        df = newframe
+    return df
+
+
 def calc_bse(
         data: pd.DataFrame,
         weight_name: Optional[str]=None,
