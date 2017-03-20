@@ -167,3 +167,145 @@ class Test_calc_wham:
                         0.25425582, 0.12314234, 0.1237596 ])
         res = util.calc_wham(data, kbt=-200)
         assert (res.round(decimals=3) == arr.round(decimals=3)).all()
+
+
+class Test_dist1D:
+    def test_1(self):
+        d = np.array([[2, 2, 1],
+                   [0, 0, 0],
+                   [0, 0, 0],
+                   [0, 0, 0],
+                   [1, 1, 2]])
+        res = util.dist1D(data, nbins=5)
+        assert (res[0] == d).all().all()
+
+    def test_2(self):
+        r = np.array([[ -0.3  ,   0.5  ,   0.2  ],
+                        [  0.025,   3.   ,   0.25 ],
+                        [  0.35 ,   5.5  ,   0.3  ],
+                        [  0.675,   8.   ,   0.35 ],
+                        [  1.   ,  10.5  ,   0.4  ]])
+        res = util.dist1D(data, nbins=5)
+        assert (res[1].round(decimals=3) == r).all().all()
+
+    def test_3(self):
+        d = np.array([[2, 1],
+                    [0, 0],
+                    [0, 0],
+                    [0, 0],
+                    [1, 2]])
+        res = util.dist1D(data, nbins=5, ignore='a')
+        assert (res[0].round(decimals=3) == d).all().all()
+
+    def test_4(self):
+        r = np.array([[  0.5 ,   0.2 ],
+                    [  3.  ,   0.25],
+                    [  5.5 ,   0.3 ],
+                    [  8.  ,   0.35],
+                    [ 10.5 ,   0.4 ]])
+        res = util.dist1D(data, nbins=5, ignore='a')
+        assert (res[1].round(decimals=3) == r).all().all()
+
+    def test_5(self):
+        d = np.array([[ 0.8],
+                    [ 0. ],
+                    [ 0. ],
+                    [ 0. ],
+                    [ 0.2]])
+        res = util.dist1D(data, nbins=5, ignore='a', weight_name='c')
+        assert (res[0].round(decimals=3) == d).all().all()
+
+    def test_6(self):
+        r = np.array([[  0.5],
+                    [  3. ],
+                    [  5.5],
+                    [  8. ],
+                    [ 10.5]])
+        res = util.dist1D(data, nbins=5, ignore='a', weight_name='c')
+        assert (res[1].round(decimals=3) == r).all().all()
+
+    def test_7(self):
+        d = np.array([[ 0.4],
+                    [ 0. ],
+                    [ 0. ],
+                    [ 0. ],
+                    [ 0.1]])
+        res = util.dist1D(data, ret='dists', nbins=5, ignore='a',
+                          weight_name='c', normed=True)
+        assert (res.round(decimals=3) == d).all().all()
+
+
+class Test_dist2D:
+    def test_1(self):
+        d = np.array([[ 2.,  0.,  0.],
+                    [ 0.,  0.,  0.],
+                    [ 0.,  2.,  2.],
+                    [ 0.,  0.,  0.],
+                    [ 0.,  0.,  0.],
+                    [ 0.,  0.,  0.],
+                    [ 0.,  1.,  1.],
+                    [ 0.,  0.,  0.],
+                    [ 1.,  0.,  0.]])
+        res = util.dist2D(data, nbins=3)
+        assert (res.round(decimals=3) == d).all().all()
+
+    def test_2(self):
+        d = np.array([[ 2.],
+                        [ 0.],
+                        [ 0.],
+                        [ 0.],
+                        [ 0.],
+                        [ 0.],
+                        [ 0.],
+                        [ 0.],
+                        [ 1.]])
+        res = util.dist2D(data, nbins=3, cvs=[('a', 'b')])
+        assert (res.round(decimals=3) == d).all().all()
+
+    def test_3(self):
+        d = np.array([[ 0.8],
+                    [ 0. ],
+                    [ 0. ],
+                    [ 0. ],
+                    [ 0. ],
+                    [ 0. ],
+                    [ 0. ],
+                    [ 0. ],
+                    [ 0.2]])
+        res = util.dist2D(data, nbins=3, cvs=[('a', 'b')], weight_name='c')
+        assert (res.round(decimals=3) == d).all().all()
+
+    def test_4(self):
+        d = np.array([[ 0.55384615],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.13846154]])
+        res = util.dist2D(data, nbins=3, weight_name='c', normed=True)
+        assert (res.round(decimals=3) == d.round(decimals=3)).all().all()
+
+    def test_5(self):
+        d = np.array([[ 0.46153846],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.        ],
+                    [ 0.23076923]])
+        res = util.dist2D(data, nbins=3, ignore=['c'], normed=True)
+        assert (res.round(decimals=3) == d.round(decimals=3)).all().all()
+
+
+class Test_free_energy:
+    def test_1(self):
+        d = np.array([[-0.   , -5.855,  4.008],
+                        [ 2.998,  1.726,  2.282],
+                        [ 4.008,  1.726,  2.282]])
+        res = util.free_energy(data.abs(), 2.49)
+        assert (res.round(decimals=3) == d.round(decimals=3)).all().all()
