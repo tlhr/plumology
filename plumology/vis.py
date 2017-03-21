@@ -1,4 +1,4 @@
-'''vis - Visualisation and plotting tools'''
+"""vis - Visualisation and plotting tools"""
 
 from typing import Union, Sequence, Optional, List, Tuple
 import sys
@@ -24,7 +24,7 @@ def fast(filename: str,
          stop: int=sys.maxsize,
          stat: bool=True,
          plot: bool=True) -> None:
-    '''
+    """
     Plot first column with every other column and show statistical information.
 
     Parameters
@@ -36,10 +36,10 @@ def fast(filename: str,
         including commented lines.
     stop : Stopping point in lines from beginning of file,
         including commented lines.
-    stats : Show statistical information.
+    stat : Show statistical information.
     plot : Plot Information.
 
-    '''
+    """
     if columns is not None:
         if isinstance(columns, str):
             columns = [columns]
@@ -86,7 +86,7 @@ def hexplot(
         hex_size: float=11.5,
         cmap: str='viridis'
 ) -> plt.Axes:
-    '''
+    """
     Plot grid and data on a hexagon grid. Useful for SOMs.
 
     Parameters
@@ -101,7 +101,7 @@ def hexplot(
     -------
     ax : Axes with hexagon plot.
 
-    '''
+    """
 
     # Create hexagons
     collection = RegularPolyCollection(
@@ -125,7 +125,7 @@ def hexplot(
 
 def dihedral(cvdata: pd.DataFrame,
              cmap: Optional[ListedColormap]=None) -> plt.Figure:
-    '''
+    """
     Plot dihedral angle data as an eventplot.
 
     Parameters
@@ -137,7 +137,7 @@ def dihedral(cvdata: pd.DataFrame,
     -------
     fig : Figure with drawn events.
 
-    '''
+    """
     # Custom periodic colormap
     if cmap is None:
 
@@ -164,7 +164,7 @@ def dihedral(cvdata: pd.DataFrame,
 
         # No interpolation because we want discrete lines
         ax.imshow(np.atleast_2d(cvdata[col]), aspect='auto',
-                  cmap=periodic, interpolation='none')
+                  cmap=cmap, interpolation='none')
 
         # Create labels
         pos = list(ax.get_position().bounds)
@@ -182,14 +182,14 @@ def dihedral(cvdata: pd.DataFrame,
 
 
 def history(cvdata: pd.DataFrame) -> None:
-    '''
+    """
     Plot CV history as a 2D scatter plot.
 
     Parameters
     ----------
     cvdata : Dataframe with time as first column and CV values for the rest.
 
-    '''
+    """
     fig = plt.figure(figsize=(16, 3 * len(cvdata.columns) // 3))
     for i, col in enumerate(cvdata.columns):
         if col == 'time':
@@ -207,7 +207,7 @@ def histogram(cvdata: pd.DataFrame,
               time: Optional[float]=None,
               nchunks: int=3,
               nbins: int=50) -> None:
-    '''
+    """
     Plots histograms of CVs in predefined chunks.
 
     Parameters
@@ -220,7 +220,7 @@ def histogram(cvdata: pd.DataFrame,
     nchunks : Number of histograms to plot.
     nbins : Number of bins to use for the histogram.
 
-    '''
+    """
     if cv_min is None or cv_max is None:
         cv_min = [cvdata[cv].values.min() for cv in cvdata.columns]
         cv_max = [cvdata[cv].values.max() for cv in cvdata.columns]
@@ -257,7 +257,7 @@ def convergence(
         factor: float=1.0,
         constant: float=0.0
 ) -> plt.Figure:
-    '''
+    """
     Estimate convergence by comparing CV histograms and sum_hills output.
 
     Parameters
@@ -273,7 +273,7 @@ def convergence(
     -------
     fig : Matplotlib figure.
 
-    '''
+    """
 
     dist, ranges = calc_dist1D(hills[hills['time'] > time])
     fes = factor * free_energy(dist, kbt) + constant
@@ -302,7 +302,7 @@ def dist1D(dist: pd.DataFrame,
            grouper: Optional[str]=None,
            nx: Optional[int]=2,
            size: Optional[Tuple[int, int]]=(8, 6)) -> plt.Figure:
-    '''
+    """
     Plot 1D probability distributions.
 
     Parameters
@@ -319,7 +319,7 @@ def dist1D(dist: pd.DataFrame,
     -------
     fig : matplotlib figure.
 
-    '''
+    """
 
     # Setup plotting parameters
     if grouper is not None:
@@ -360,7 +360,7 @@ def dist2D(dist: pd.DataFrame,
            size: int=6,
            colorbar: bool=True,
            name: str='dist') -> plt.Figure:
-    '''
+    """
     Plot 2D probability distributions.
 
     Parameters
@@ -379,7 +379,7 @@ def dist2D(dist: pd.DataFrame,
     -------
     fig : matplotlib figure.
 
-    '''
+    """
 
     # Setup plotting parameters
     nplots = dist.shape[1]
@@ -412,15 +412,15 @@ def dist2D(dist: pd.DataFrame,
     return fig
 
 
-def rmsd(rmsd: pd.DataFrame,
+def rmsd(rmsds: pd.DataFrame,
          aspect: Tuple[int, int]=(4, 6),
          nx: int=5) -> plt.Figure:
-    '''
+    """
     Plot RMSDs.
 
     Parameters
     ----------
-    rmsd : Dataframe with force field as index and CVs as columns.
+    rmsds : Dataframe with force field as index and CVs as columns.
     aspect : Aspect ratio of individual plots.
     nx : Number of plots before wrapping to next row.
 
@@ -428,18 +428,18 @@ def rmsd(rmsd: pd.DataFrame,
     -------
     rmsd : Figure with RMSDs.
 
-    '''
+    """
 
-    ny = len(rmsd.columns) // nx + 1
+    ny = len(rmsds.columns) // nx + 1
     fig = plt.figure(figsize=(nx * aspect[0], ny * aspect[1]))
 
-    for i, col in enumerate(rmsd.columns):
-        nbars = rmsd[col].shape[0]
+    for i, col in enumerate(rmsds.columns):
+        nbars = rmsds[col].shape[0]
         ax = fig.add_subplot(ny, nx, i + 1)
-        ax.bar(np.arange(nbars), rmsd[col].values, linewidth=0)
+        ax.bar(np.arange(nbars), rmsds[col].values, linewidth=0)
         ax.set_title(col)
         ax.set_xticks(np.linspace(0.5, 0.5 + nbars - 1, nbars))
-        ax.set_xticklabels(list(rmsd[col].keys()))
+        ax.set_xticklabels(list(rmsds[col].keys()))
         ax.set_ylabel('RMSD [{0}]'.format('ppm' if 'CS' in col else 'Hz'))
         plt.setp(
             plt.gca().get_xticklabels(),
@@ -455,7 +455,7 @@ def metai(file: str,
           step: int=1,
           start: int=0,
           stop: int=sys.maxsize) -> None:
-    '''
+    """
     Plot metainference information.
 
     Parameters
@@ -465,7 +465,7 @@ def metai(file: str,
     start : Start plotting from here.
     stop : Stop plotting here.
 
-    '''
+    """
     data = read_plumed(
         file,
         step=step,
@@ -518,7 +518,7 @@ def interactive(file: str,
                 step: int=1,
                 start: int=0,
                 stop: int=sys.maxsize) -> None:
-    '''
+    """
     Plot values interactively.
 
     Parameters
@@ -532,7 +532,7 @@ def interactive(file: str,
     start : Start plotting from here.
     stop : Stop plotting here.
 
-    '''
+    """
     try:
         from bokeh.plotting import show, figure
         import bokeh.palettes as pal

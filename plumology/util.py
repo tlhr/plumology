@@ -1,4 +1,4 @@
-'''util - Utilities and calculation functions'''
+"""util - Utilities and calculation functions"""
 
 import functools
 import glob
@@ -24,11 +24,11 @@ __all__ = ['calc_entropy', 'calc_nmr', 'calc_rdc', 'calc_rmsd', 'stats',
 
 
 def _preserve_cwd(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
-    '''
+    """
     This decorator preserves the current working
     directory through the function call.
 
-    '''
+    """
     @functools.wraps(func)
     def decorator(*args, **kwargs):
         cwd = os.getcwd()
@@ -41,10 +41,10 @@ def _preserve_cwd(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
 
 
 def _typecheck(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
-    '''
+    """
     Checks type annotated function arguments.
 
-    '''
+    """
     @functools.wraps(func)
     def decorator(*args, **kwargs):
 
@@ -70,7 +70,7 @@ def population(
         weight_name: Optional[str]=None,
         cv_names: Tuple[str, str]=('cv1', 'cv2')
 ) -> Dict[Tuple[float, float], float]:
-    '''
+    """
     Calculate the population on a 2D free energy surface by summing up weights.
 
     Parameters
@@ -79,12 +79,13 @@ def population(
     minima : List of centers of minima.
     radius : Aggregation radius.
     weight_name : Name of the weight column.
+    cv_names : Names of the two CV columns.
 
     Returns
     -------
     population : Dictionary containing percentages mapped to minima.
 
-    '''
+    """
     if any(cv not in data.columns for cv in cv_names):
         raise KeyError('cv_names not found in dataframe!')
 
@@ -106,11 +107,11 @@ def population(
 def clip(
         data: pd.DataFrame,
         ranges: Mapping[str, Tuple[float, float]],
-        ignore: Sequence[str]=None,
+        ignore: List[str]=None,
         weight_name: Optional[str]=None,
         renormalize: bool=True
 ) -> pd.DataFrame:
-    '''
+    """
     Clip a dataset to a fixed range, discarding other datapoints.
 
     Parameters
@@ -118,13 +119,14 @@ def clip(
     data : Dataset to clip.
     ranges : Ranges to clip in.
     ignore : Columns to ignore.
+    weight_name : Name of the weight column.
     renormalize : Recalculate the weights if needed.
 
     Returns
     -------
     data : Clipped data
 
-    '''
+    """
     if ignore is None:
         ignore = [weight_name]
     else:
@@ -143,7 +145,7 @@ def clip(
 
 
 def stats(fields: Sequence[str], data: np.ndarray) -> List[str]:
-    '''
+    """
     Calculate statistical properties of dataset and format them nicely.
 
     Parameters
@@ -155,7 +157,7 @@ def stats(fields: Sequence[str], data: np.ndarray) -> List[str]:
     -------
     stats : List of formatted strings with statistical information.
 
-    '''
+    """
     if len(fields) != np.size(data, axis=1):
         raise ValueError('Fields and data must have identical sizes!')
     return [
@@ -175,7 +177,7 @@ def chunk_range(chunk_min: float,
                 chunk_max: float,
                 nchunks: int,
                 first_chunk_size: Optional[float]=None) -> List[float]:
-    '''
+    """
     Create chunk indices based on continuous data.
 
     Parameters
@@ -190,7 +192,7 @@ def chunk_range(chunk_min: float,
     -------
     chunks : List of chunk areas.
 
-    '''
+    """
     if chunk_max <= chunk_min:
         raise ValueError('chunk_max must be larger than chunk_min!')
     elif nchunks <= 0:
@@ -214,7 +216,7 @@ def chunk_range(chunk_min: float,
 
 
 def last_nonzero(data: pd.DataFrame) -> pd.Series:
-    '''
+    """
     Get the last non-zero elements from a dataframe.
 
     Parameters
@@ -225,7 +227,7 @@ def last_nonzero(data: pd.DataFrame) -> pd.Series:
     -------
     nonzero : Series of last non-zero datapoints.
 
-    '''
+    """
     nonzero = {}
     for col in data.columns:
         vals = data[col][(data[col] > 0.000) | (data[col] < 0.000)]
@@ -237,7 +239,7 @@ def dict_to_dataframe(
         data: Dict[str, pd.DataFrame],
         grouper: str='ff'
 ) -> pd.DataFrame:
-    '''
+    """
     Convert a dictionary of dataframes to a multiindexed dataframe.
 
     Parameters
@@ -249,7 +251,7 @@ def dict_to_dataframe(
     -------
     data : Multiindexed dataframe.
 
-    '''
+    """
     dfs = []
     for key, df in data.items():
         df[grouper] = key
@@ -262,7 +264,7 @@ def sum_rows(
         df: pd.DataFrame,
         names: Mapping[str, Sequence[str]]
 ) -> pd.DataFrame:
-    '''
+    """
     Sum specified rows in a dataframe under a new name.
 
     Parameters
@@ -274,7 +276,7 @@ def sum_rows(
     -------
     df : Dataframe with summed rows.
 
-    '''
+    """
     for new_name, old_names in names.items():
         summed_rows = df.loc[old_names].sum()
         newframe = df.drop(old_names)
@@ -288,7 +290,7 @@ def calc_bse(
         weight_name: Optional[str]=None,
         ignore: List[str]=None
 ) -> pd.DataFrame:
-    '''
+    """
     Calculate the Block Standard Error (BSE).
 
     Parameters
@@ -306,7 +308,7 @@ def calc_bse(
     Flyvbjerg, H., Petersen, H. G. Error estimates on averages of correlated
     data. The Journal of Chemical Physics, 91(1), 461 (1989)
 
-    '''
+    """
     if ignore is None:
         ignore = []
     if 'time' not in ignore:
@@ -322,7 +324,7 @@ def calc_bse(
     index = data.T.index
     data = data.values
     blist = [data.std(axis=0) / np.sqrt(length)]
-    length = length // 2
+    length //= 2
 
     # Iteratively increase block size
     while length > 2:
@@ -340,7 +342,7 @@ def calc_bse(
         # Calculate the BSE
         bse = halved.std(axis=0) / np.sqrt(length)
         blist.append(bse)
-        length = length // 2
+        length //= 2
 
     # Reconstruct Dataframe
     return pd.DataFrame(np.asarray(blist), columns=index).drop(ignore, axis=1)
@@ -348,7 +350,7 @@ def calc_bse(
 
 def calc_wham(bias: Union[str, np.ndarray],
               kbt: float=2.49339) -> np.ndarray:
-    '''
+    """
     Perform the weighted histogram analysis method on an array of biases.
 
     Parameters
@@ -360,7 +362,7 @@ def calc_wham(bias: Union[str, np.ndarray],
     -------
     weights : The weights corresponding to timesteps.
 
-    '''
+    """
     # Check and load input
     if isinstance(bias, str):
         data = np.loadtxt(bias, usecols=(-1,))
@@ -388,7 +390,7 @@ def calc_wham(bias: Union[str, np.ndarray],
 def calc_entropy(data: pd.DataFrame,
                  keys: Sequence[str],
                  kind: str='kl') -> pd.DataFrame:
-    '''
+    """
     Compute the divergence of two probability distributions.
 
     Parameters
@@ -401,7 +403,7 @@ def calc_entropy(data: pd.DataFrame,
     -------
     kld : Dataframe of length 1 with the calculated values.
 
-    '''
+    """
     # Check input
     valid_kinds = ['kl', 'kls', 'shannon', 'js', 'hellinger']
     if kind not in valid_kinds:
@@ -426,7 +428,7 @@ def calc_entropy(data: pd.DataFrame,
                      entropy(data_b[col], data_a[col]))
             elif kind == 'kl':
                 S = entropy(data_a[col], data_b[col])
-            elif kind == 'shannon':
+            elif kind in ['shannon', 'js']:
                 M = 0.5 * (data_a[col] + data_b[col])
                 S = 0.5 * (entropy(data_a[col], M) + entropy(data_b[col], M))
             elif kind == 'hellinger':
@@ -450,12 +452,14 @@ def dist1D(
         normed: bool=False
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
-    '''
+    """
     Create a 1D weighted probability distribution.
 
     Parameters
     ----------
     data : Dataframe with CV data over time and weights.
+    ret : If "both", returns ranges and dist, other
+        options are dist, (edges/ranges).
     nbins : Number of bins to use for the histogram.
     weight_name : Name of the weight column.
     ignore : List of column names to ignore.
@@ -465,7 +469,7 @@ def dist1D(
     -------
     dist1D : Probability distribution as Dataframe.
 
-    '''
+    """
     if ignore is None:
         ignore = ['time']
 
@@ -486,17 +490,15 @@ def dist1D(
     # Iterate over CVs
     for col in cols:
 
+        # Skip non-CV columns
+        if col in ignore or col == weight_name:
+            continue
+
         # We copy into new arrays because numpy
         # operations on h5py datasets are very slow
         data_col = data[col][::]
         if weight_name is not None:
             data_ww = data[weight_name][::]
-
-        # Skip non-CV columns
-        if col in ignore or col == weight_name:
-            continue
-
-        if weight_name is not None:
             dist, _ = np.histogram(data_col, weights=data_ww,
                                    bins=nbins, density=normed)
         else:
@@ -521,7 +523,7 @@ def dist2D(data: Union[pd.DataFrame, h5py.Group],
            weight_name: Optional[str]=None,
            ignore: List[str]=None,
            normed: bool=False) -> pd.DataFrame:
-    '''
+    """
     Create a 2D weighted probability distribution.
 
     Parameters
@@ -531,12 +533,13 @@ def dist2D(data: Union[pd.DataFrame, h5py.Group],
     nbins : Number of bins to use for the histogram.
     weight_name : Name of the weight column.
     ignore : List of column names to ignore.
+    normed : Normalize the histogram.
 
     Returns
     -------
     dist2D : Probability distribution as Dataframe.
 
-    '''
+    """
 
     if ignore is None:
         ignore = ['time']
@@ -586,7 +589,7 @@ def dist2D(data: Union[pd.DataFrame, h5py.Group],
 
 
 def free_energy(dist: pd.DataFrame, kbt: float) -> pd.DataFrame:
-    '''
+    """
     Compute the free energy from a probability distribution.
 
     Parameters
@@ -598,13 +601,13 @@ def free_energy(dist: pd.DataFrame, kbt: float) -> pd.DataFrame:
     -------
     free_energy : Free energy of probability distribution as a Dataframe.
 
-    '''
+    """
     return dist.applymap(lambda p: -kbt * np.log(p)
                          if p != 0 else float('inf'))
 
 
 def calc_sqdev(data: pd.DataFrame) -> pd.DataFrame:
-    '''
+    """
     Calculate the Squared-Deviation per residue.
 
     Parameters
@@ -615,7 +618,7 @@ def calc_sqdev(data: pd.DataFrame) -> pd.DataFrame:
     -------
     sqdev : Force field indexed dataframe
 
-    '''
+    """
     cols = [c for c in data.columns if 'exp' not in c]
 
     # Separate dataframe into simulation data and experimental data
@@ -628,18 +631,19 @@ def calc_sqdev(data: pd.DataFrame) -> pd.DataFrame:
 
 def calc_rmsd(data: pd.DataFrame,
               grouper: Optional[str]='ff') -> pd.DataFrame:
-    '''
+    """
     Calculate the Root-Mean-Squared-Deviation.
 
     Parameters
     ----------
     data : Multiindexed dataframe with force field and residue number
+    grouper : Grouping level to use.
 
     Returns
     -------
     rmsd : Force field indexed dataframe
 
-    '''
+    """
     return (calc_sqdev(data).groupby(level=[grouper])
             .agg(np.mean)
             .apply(np.sqrt))
@@ -650,7 +654,7 @@ def calc_rdc(executable: str,
              trajectory_file: str,
              pdb_file: str,
              exp_files: List[str]) -> Dict[str, float]:
-    '''
+    """
     Calculate RDCs using Tensor alignment.
 
     Parameters
@@ -666,7 +670,7 @@ def calc_rdc(executable: str,
     rdcs : Dictionary containing the RDC name
         as keys and the calculated value.
 
-    '''
+    """
 
     with tempfile.TemporaryDirectory() as tmp:
         output = [join(tmp, 'fit_{0}'.format(i))
@@ -692,7 +696,7 @@ def calc_nmr(executable: str,
              runtime_file: str,
              nres: int,
              skip: int=50) -> Dict[str, float]:
-    '''
+    """
     Calculate chemical shifts using an external program.
 
     Parameters
@@ -709,7 +713,7 @@ def calc_nmr(executable: str,
     cs : Dictionary containing the chemical shift names
         as keys and the calculated values.
 
-    '''
+    """
 
     # Check and read input
     if isinstance(weights, str):

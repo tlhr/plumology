@@ -1,4 +1,4 @@
-'''som - Self-organising-map'''
+"""som - Self-organising-map"""
 
 from typing import Optional, Tuple
 import numpy as np
@@ -6,7 +6,7 @@ from sklearn.decomposition import PCA
 
 
 class SOM:
-    '''
+    """
     SOM - Self-Organising-Map.
 
     A 2D neural network that clusters high-dimensional data iteratively.
@@ -71,7 +71,7 @@ class SOM:
     Kohonen, T., "Self-Organized Formation of Topologically Correct
     Feature Maps". In: Biological Cybernetics 43 (1): 59–69 (1982).
 
-    '''
+    """
     def __init__(
             self,
             nx: int,
@@ -165,12 +165,15 @@ class SOM:
                  'Valid types: exp, power, linear')
             raise ValueError(e)
 
+        # Create empty index grid
+        self.index = np.zeros(self._shape, dtype=np.int32)
+
         # Output grid for easier plotting
         self.grid = np.asarray(list(zip(self._locX.flatten(),
                                         self._locY.flatten())))
 
     def _init_weights(self, X: np.ndarray) -> None:
-        '''Initialize weights from PCA eigenvectors'''
+        """Initialize weights from PCA eigenvectors"""
         if not hasattr(self, 'weights'):
             pca = PCA(n_components=self._ndims)
             comp = pca.fit(X).components_[:2]
@@ -191,13 +194,16 @@ class SOM:
                 raw_weights.ptp(2).reshape(full_shape)
             )
 
-    def _nb_gaussian(self, dist: np.ndarray, sigma: float) -> np.ndarray:
+    @staticmethod
+    def _nb_gaussian(dist: np.ndarray, sigma: float) -> np.ndarray:
         return np.exp(-dist ** 2 / (2 * sigma ** 2))
 
-    def _nb_bubble(self, dist: np.ndarray, sigma: float) -> np.ndarray:
+    @staticmethod
+    def _nb_bubble(dist: np.ndarray, sigma: float) -> np.ndarray:
         return dist
 
-    def _nb_epanechnikov(self, dist: np.ndarray, sigma: float) -> np.ndarray:
+    @staticmethod
+    def _nb_epanechnikov(dist: np.ndarray, sigma: float) -> np.ndarray:
         return np.maximum(np.zeros_like(dist), 1 - dist ** 2)
 
     def _lr_exp(self, t: int) -> float:
@@ -280,14 +286,14 @@ class SOM:
                 self.weights += mask * theta * lr * (f - self.weights)
 
     def fit(self, X: np.ndarray) -> None:
-        '''
+        """
         Run the SOM.
 
         Parameters
         ----------
         X : input data as array of vectors.
 
-        '''
+        """
         self._init_weights(X)
         if self._type == 's':
             self._train(X)
@@ -296,7 +302,7 @@ class SOM:
         self._trained = True
 
     def create_index(self, X: np.ndarray) -> None:
-        '''
+        """
         Create an index grid, allowing the coloring of the map with arbitrary
         feature data. For instance, one could train the SOM on a subset of the
         data, and then create an index using the full dataset. The transform()
@@ -307,18 +313,16 @@ class SOM:
         ----------
         X : input data as used to train the SOM, can be significantly larger.
 
-        '''
+        """
         if not self._trained:
             raise ValueError('You need to train the SOM first!')
-
-        self.index = np.zeros(self._shape, dtype=np.int32)
 
         # For each node we calculate the distance to each datapoint
         for index in np.ndindex(self._shape):
             self.index[index] = self._dist(X, index=index, axis=1).argmin()
 
     def transform(self, X: np.ndarray) -> np.ndarray:
-        '''
+        """
         Transform a dataset based on the index grid created by index().
         This method will return a subset of the dataset in the shape of
         the node matrix.
@@ -331,7 +335,7 @@ class SOM:
         -------
         grid : subset of the input data assigned to the best nodes
 
-        '''
+        """
         if not self._trained:
             raise ValueError('You need to train the SOM first!')
         if not hasattr(self, 'index'):

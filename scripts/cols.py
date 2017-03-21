@@ -5,7 +5,7 @@ from typing import List
 
 
 def is_plumed(file: str) -> bool:
-    '''
+    """
     Checks if the file is of plumed format.
 
     Parameters
@@ -17,7 +17,7 @@ def is_plumed(file: str) -> bool:
     is_plumed : Returns true if file is valid plumed format,
         raises ValueError otherwise.
 
-    '''
+    """
     with open(file, 'r') as f:
         head = f.readlines(0)[0]
         if head.startswith('#!'):
@@ -27,7 +27,7 @@ def is_plumed(file: str) -> bool:
 
 
 def read_plumed_fields(file: str) -> List[str]:
-    '''
+    """
     Reads the fields specified in the plumed file.
 
     Parameters
@@ -38,7 +38,7 @@ def read_plumed_fields(file: str) -> List[str]:
     -------
     fields : List of field names.
 
-    '''
+    """
     is_plumed(file)
     with open(file, 'br') as f:
         head = f.readlines(0)[0].split()[2:]
@@ -50,6 +50,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Show PLUMED file columns.')
     parser.add_argument('filename', type=str, help='PLUMED file')
     args = parser.parse_args()
-    fields = read_plumed_fields(args.filename)
-    for i, field in enumerate(fields):
+    cols = read_plumed_fields(args.filename)
+    for i, field in enumerate(cols):
         print('{0}: {1}'.format(i + 1, field))

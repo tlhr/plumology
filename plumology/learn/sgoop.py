@@ -1,4 +1,4 @@
-'''SGOOP - Spectral Gap Optimization Of Order Parameters'''
+"""SGOOP - Spectral Gap Optimization Of Order Parameters"""
 
 from typing import Tuple
 
@@ -8,7 +8,7 @@ from scipy.optimize import basinhopping
 
 
 class SGOOP:
-    '''
+    """
     SGOOP - Spectral Gap Optimization Of Order Parameters [EXPERIMENTAL]
 
     Given a trajectory along a trial CV, calculates
@@ -34,7 +34,7 @@ class SGOOP:
     of order parameters for sampling complex molecular systems"
     PNAS, 113(11), 2839–2844. http://doi.org/10.1073/pnas.1600917113
 
-    '''
+    """
     def __init__(
         self,
         data: np.ndarray,
@@ -51,9 +51,10 @@ class SGOOP:
         self._lag_time = lag_time
         self._weights = weights
         self._n = n
+        self.coeffs = np.empty((data.shape[1],))
 
     def fit(self, niter: int=1000) -> Tuple[float, np.ndarray]:
-        '''
+        """
         Optimize the spectral gap using basin hopping.
 
         Parameters
@@ -64,9 +65,9 @@ class SGOOP:
         -------
         coeffs : The found ideal coefficients.
 
-        '''
+        """
         dim = self._data.shape[1]
-        rs = np.ones((dim))
+        rs = np.ones((dim,))
         rs *= 1 / np.sqrt((rs ** 2).sum())
         result = basinhopping(
             func=self._score,
@@ -90,10 +91,10 @@ class SGOOP:
         ).eigenvalues()
 
     def _score(self, coeffs: np.ndarray) -> float:
-        '''
+        """
         Calculates the negative of the spectral gap given a set of coefficients
 
-        '''
+        """
         coeffs *= 1 / np.sqrt((coeffs ** 2).sum())
         self._newcv = (self._data * coeffs).sum(axis=1)
         self.eigen = self._find_omega_msm()

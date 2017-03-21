@@ -1,4 +1,4 @@
-'''rw - IO tools for PLUMED files and related data'''
+"""rw - IO tools for PLUMED files and related data"""
 
 from collections import OrderedDict
 import glob
@@ -8,8 +8,7 @@ import re
 import subprocess
 import sys
 import tempfile
-from typing import (Any, Sequence, List, Tuple, Iterator, Mapping,
-                    Dict, Union, Optional)
+from typing import (Any, Sequence, List, Tuple, Iterator, Dict, Union, Optional)
 
 import numpy as np
 import pandas as pd
@@ -21,7 +20,7 @@ __all__ = ['is_plumed', 'is_same_shape', 'read_plumed_fields',
 
 
 def is_plumed(file: str) -> bool:
-    '''
+    """
     Checks if the file is of plumed format.
 
     Parameters
@@ -33,7 +32,7 @@ def is_plumed(file: str) -> bool:
     is_plumed : Returns true if file is valid plumed format,
         raises ValueError otherwise.
 
-    '''
+    """
     with open(file, 'r') as f:
         head = f.readlines(0)[0]
         if head.startswith('#!'):
@@ -43,7 +42,7 @@ def is_plumed(file: str) -> bool:
 
 
 def is_same_shape(data: List[np.ndarray]) -> bool:
-    '''
+    """
     Checks if a list of ndarrays all have the same shape.
 
     Parameters
@@ -54,12 +53,12 @@ def is_same_shape(data: List[np.ndarray]) -> bool:
     -------
     is_same_shape : True if same shape, False if not
 
-    '''
+    """
     return len(set(d.shape for d in data)) == 1
 
 
 def _offbyone_check(num1: int, num2: int) -> bool:
-    '''
+    """
     Check if two integers are the same by a margin of one.
 
     Parameters
@@ -72,12 +71,12 @@ def _offbyone_check(num1: int, num2: int) -> bool:
     offbyone : True if numbers are the same
         with offset of one, False otherwise.
 
-    '''
+    """
     return num1 == num2 or num1 + 1 == num2 or num1 - 1 == num2
 
 
 def read_plumed_fields(file: str) -> List[str]:
-    '''
+    """
     Reads the fields specified in the plumed file.
 
     Parameters
@@ -88,7 +87,7 @@ def read_plumed_fields(file: str) -> List[str]:
     -------
     fields : List of field names.
 
-    '''
+    """
     is_plumed(file)
     with open(file, 'br') as f:
         head = f.readlines(0)[0].split()[2:]
@@ -97,7 +96,7 @@ def read_plumed_fields(file: str) -> List[str]:
 
 
 def plumed_iterator(file: str) -> Iterator[List[float]]:
-    '''
+    """
     Creates an iterator over a plumed file.
 
     Parameters
@@ -108,7 +107,7 @@ def plumed_iterator(file: str) -> Iterator[List[float]]:
     ------
     iter : List of floats for each line read.
 
-    '''
+    """
     is_plumed(file)
     with open(file, 'r') as f:
         for line in f:
@@ -118,7 +117,7 @@ def plumed_iterator(file: str) -> Iterator[List[float]]:
 
 
 def file_length(file: str, skip_comments: bool=False) -> int:
-    '''
+    """
     Counts number of lines in file.
 
     Parameters
@@ -131,7 +130,7 @@ def file_length(file: str, skip_comments: bool=False) -> int:
     -------
     length : Length of the file.
 
-    '''
+    """
     with open(file, 'r') as f:
         i = -1
         if skip_comments:
@@ -157,7 +156,7 @@ def read_plumed(
         raise_error: bool=False,
         drop_nan: bool=True
 ) -> Union[pd.DataFrame, Tuple[List[str], np.ndarray]]:
-    '''
+    """
     Read a plumed file and return its contents as a 2D ndarray.
 
     Parameters
@@ -181,7 +180,7 @@ def read_plumed(
     fields : List of field names.
     data : 2D numpy ndarray with the contents from file.
 
-    '''
+    """
     is_plumed(file)
     length = file_length(file)
     if stop != sys.maxsize and length < stop and raise_error:
@@ -245,9 +244,9 @@ def read_plumed(
 def read_multi(
         files: Union[Sequence[str], str],
         ret: str='horizontal',
-        **kwargs: Optional[Mapping[str, Any]]
+        **kwargs: Optional[Dict[str, Any]]
 ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
-    '''
+    """
     Read multiple Plumed files and return as concatenated dataframe.
 
     Parameters
@@ -264,7 +263,7 @@ def read_multi(
     -------
     df : Dataframe with concatenated data.
 
-    '''
+    """
 
     if isinstance(files, str):
         files = [files]
@@ -308,6 +307,9 @@ def read_multi(
     elif ret.startswith('m'):
         data = pd.concat(dflist).groupby(level=0).mean()
 
+    else:
+        raise ValueError('{0} is not a valid return type!'.format(ret))
+
     return data
 
 
@@ -315,7 +317,7 @@ def field_glob(
         fields: Union[str, Sequence[str]],
         full_fields: Sequence[str]
 ) -> List[str]:
-    '''
+    """
     Gets a list of matching fields from valid regular expressions.
 
     Parameters
@@ -327,7 +329,7 @@ def field_glob(
     -------
     matches : List of matching fields.
 
-    '''
+    """
 
     if isinstance(fields, str):
         fields = [fields]
@@ -348,7 +350,7 @@ def fields_to_columns(
         fields: Union[Sequence[str], Sequence[int]],
         full_fields: Sequence[str]
 ) -> Tuple[Tuple[str, ...], Tuple[int, ...]]:
-    '''
+    """
     Transforms a sequence of field names to their respective column indices.
 
     Parameters
@@ -361,7 +363,7 @@ def fields_to_columns(
     -------
     columns : Column indices, None if fields is none.
 
-    '''
+    """
     if fields is None:
         return tuple(full_fields), None
 
@@ -376,18 +378,21 @@ def fields_to_columns(
 def read_all_hills(files: Union[Sequence[str], str],
                    colvar: bool=False,
                    step: int=1) -> pd.DataFrame:
-    '''
+    """
     Read CV information from HILLS files.
 
     Parameters
     ----------
     files : List of filenames or glob pattern to read from.
+    colvar : Read files with several collective variables and a possible
+        bias column instead of single hills files.
     step : Stepsize to use while reading.
+
     Returns
     -------
     timedata : Dataframe with time as first column and CV data for the rest.
 
-    '''
+    """
     if isinstance(files, str):
         files = [files]
 
@@ -428,7 +433,7 @@ def read_all_hills(files: Union[Sequence[str], str],
 
 def sum_hills(files: Union[Sequence[str], str],
               nbins: int=50, plumed: str='plumed') -> pd.DataFrame:
-    '''
+    """
     Calculate the free-energy using plumed sum_hills.
 
     Parameters
@@ -441,7 +446,7 @@ def sum_hills(files: Union[Sequence[str], str],
     -------
     summed_hills : Dataframe containing binned data for each hills file.
 
-    '''
+    """
 
     if isinstance(files, str):
         files = [files]
@@ -470,7 +475,7 @@ def sum_hills(files: Union[Sequence[str], str],
 
 
 def read_rdc(files: Sequence[str]) -> Dict[str, float]:
-    '''
+    """
     Reads files generated by an RDC program.
 
     Parameters
@@ -482,7 +487,7 @@ def read_rdc(files: Sequence[str]) -> Dict[str, float]:
     rdcs : Dictionary containing the RDC name
         as keys and the calculated value.
 
-    '''
+    """
     rdcs = {}
 
     # Open dat files and parse
@@ -515,7 +520,7 @@ def read_nmr(
         nfiles: int,
         nres: int
 ) -> Dict[str, float]:
-    '''
+    """
     Read chemical shifts from an external program.
 
     Parameters
@@ -523,7 +528,6 @@ def read_nmr(
     weights : Array of weights.
     directory : Directory conatining the pred.tab files.
     nfiles : Number of pred.tab files.
-    skip : Number of frames to skip when extracting PDB frames.
     nres : Number of residues of the system.
 
     Returns
@@ -531,7 +535,7 @@ def read_nmr(
     cs : Dictionary containing the chemical shift names
         as keys and the calculated values.
 
-    '''
+    """
 
     # Prepare input files
     spfiles = [directory + '/traj{0}_pred.tab'.format(i)

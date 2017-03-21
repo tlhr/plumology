@@ -1,4 +1,4 @@
-'''hdf - HDF5 wrappers and utilities'''
+"""hdf - HDF5 wrappers and utilities"""
 
 from typing import (Any, Sequence, List, Mapping,
                     Callable, Union, Optional)
@@ -20,7 +20,7 @@ def plumed_to_hdf(
         columnwise: bool=False,
         overwrite: bool=False,
 ) -> None:
-    '''
+    """
     Read PLUMED files and dump to HDF5.
 
     Parameters
@@ -33,7 +33,7 @@ def plumed_to_hdf(
         this is easier on memory, but far slower.
     overwrite : Overwrite an existing file, or just append.
 
-    '''
+    """
 
     # Check input
     if not isinstance(files, list):
@@ -105,21 +105,25 @@ def hdf_to_dataframe(
         grouper: str='ff',
         weight_name: str='ww'
 ) -> pd.DataFrame:
-    '''
+    """
     Read HDF file to dataframe and reduce number of datapoints.
 
     Parameters
     ----------
     hdf_file : Path to HDF file.
     reduce : Skip this number of lines when reading the file.
+    aggregator : Function taking a column as input and returning a float.
+    weight : Whether to reweight the data using a weight column.
     reshape : If true, use wide_to_long to add residue index.
+    grouper : Name of the index determining the simulation.
+    weight_name : Name of the weight column.
 
     Returns
     -------
     df : Multiindexed dataframe with the type of datapoint as columns
         and time, residue number and HDF top-level key as indices.
 
-    '''
+    """
     if reduce is not None and aggregator is not None:
         raise TypeError(
             'You can not specify both a reduction and an aggregator!'
@@ -199,7 +203,7 @@ def plumed_to_h5(
         kwargs: Union[Mapping[str, Any],
                       Sequence[Mapping[str, Any]], None]=None
 ) -> None:
-    '''
+    """
     Read PLUMED files and dump to pytables HDF5.
 
     Parameters
@@ -208,9 +212,10 @@ def plumed_to_h5(
     hdf_file : Path to HDF file.
     func : Function(s) operating on dataframe chunks.
     chunksize : Size of the chunks to be read by pd.read_csv()
+    verbose : Be more verbose.
     kwargs : Arguments to be passed to func.
 
-    '''
+    """
 
     # Check input
     if isinstance(files, list):

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from importlib import import_module
 try:
     from setuptools import setup, find_packages
 except ImportError:
@@ -30,31 +29,6 @@ LICENSE = 'MIT'
 VERSION = '0.0.1'
 
 
-def check_deps():
-    missing = []
-    required = [
-        'numpy',
-        'pandas',
-        'matplotlib',
-        'scipy',
-        'sklearn',
-        'h5py'
-    ]
-    recommended = ['bokeh', 'numba']
-    for pack in required:
-        try:
-            import_module(pack)
-        except ImportError:
-            missing.append(pack)
-
-    for pack in recommended:
-        try:
-            import_module(pack)
-        except ImportError:
-            print('Warning: {0} not found but recommended!'.format(pack))
-
-
-missing = check_deps()
 setup(
     name=DISTNAME,
     author=MAINTAINER,
@@ -67,7 +41,8 @@ setup(
     url=URL,
     version=VERSION,
     download_url=DOWNLOAD_URL,
-    install_requires=missing,
+    install_requires=['numpy', 'pandas', 'matplotlib', 'scipy', 'sklearn',
+                      'h5py', 'pyemma', 'bokeh'],
     packages=find_packages(),
     classifiers=[
         'Intended Audience :: Science/Research',
