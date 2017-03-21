@@ -6,6 +6,7 @@ from plumology import util
 
 arr = [[1.0, 10.5, 0.2], [-0.3, 0.5, 0.4], [-0.2, 0.5, 0.4]]
 data = pd.DataFrame(data=arr, columns=['a', 'b', 'c'])
+expdata = data.rename(columns={'c': 'exp_a'}).drop('b', axis=1)
 
 
 class Test_population:
@@ -308,4 +309,25 @@ class Test_free_energy:
                         [ 2.998,  1.726,  2.282],
                         [ 4.008,  1.726,  2.282]])
         res = util.free_energy(data.abs(), 2.49)
+        assert (res.round(decimals=3) == d.round(decimals=3)).all().all()
+
+
+class Test_calc_sqdev:
+    def test_1(self):
+        d = np.array([[ 0.64],
+                    [ 0.49],
+                    [ 0.36]])
+        res = util.calc_sqdev(data.rename(columns={'c': 'exp_a'}).drop('b', axis=1))
+        assert (res.round(decimals=3) == d.round(decimals=3)).all().all()
+
+
+class Test_calc_rmsd:
+    def test_1(self):
+        d = np.array([[ 1.26491106],
+                    [ 1.10679718],
+                    [ 0.9486833 ]])
+        edata = (util.dict_to_dataframe({1: expdata, 2: expdata * 2},
+                                        grouper='res_nr')
+                 .reset_index().set_index(keys=['level_0', 'res_nr']))
+        res = util.calc_rmsd(edata, grouper='level_0')
         assert (res.round(decimals=3) == d.round(decimals=3)).all().all()
