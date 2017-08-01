@@ -655,7 +655,7 @@ def calc_rdc(executable: str,
              pdb_file: str,
              exp_files: List[str]) -> Dict[str, float]:
     """
-    Calculate RDCs using Tensor alignment.
+    Calculate RDCs using SVD.
 
     Parameters
     ----------
