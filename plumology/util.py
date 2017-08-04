@@ -1,14 +1,17 @@
 """util - Utility functions"""
 
+import itertools
 import functools
 from inspect import signature
 import os
-from typing import (Any, Dict, Callable)
+from typing import (Any, Dict, Callable, Tuple)
 
+import numpy as np
 import pandas as pd
 
 
-__all__ = ['last_nonzero', 'dict_to_dataframe', 'preserve_cwd', 'typecheck']
+__all__ = ['last_nonzero', 'dict_to_dataframe', 'preserve_cwd', 'typecheck',
+           'hypercube', 'make_blobs', 'py2c', 'aligned', 'array_to_pointer']
 
 
 def preserve_cwd(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
@@ -94,3 +97,131 @@ def dict_to_dataframe(
         dfs.append(df)
 
     return pd.concat(dfs).set_index(grouper, append=True).sort_index()
+
+
+def extend_array(arr: np.ndarray, modulo: int=4) -> np.ndarray:
+    """
+    Extend a 2D array with zeros along axis 1, so that it's width is divisible
+    by modulo.
+
+    Parameters
+    ----------
+    arr : Numpy array to be extended.
+    modulo : Divisor, so that arr.shape[1] % modulo == 0
+
+    Returns
+    -------
+    data : extended numpy array
+
+    """
+    if arr.shape[1] % modulo == 0:
+        return arr
+    else:
+        return np.column_stack(
+            (arr, np.zeros((arr.shape[0], 4 - arr.shape[1] % 4),
+                           dtype=arr.dtype))
+        )
+
+
+def hypercube(n: int) -> np.ndarray:
+    """
+    Create hypercube coordinates.
+
+    Parameters
+    ----------
+    n : Dimensionality
+
+    Returns
+    -------
+    arr : 2D numpy array with all cube vertices.
+
+    """
+    return np.asarray(list(itertools.product((0, 1), repeat=n)))
+
+
+def make_blobs(dim: int, npoints: int) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Create blobs of points in higher dimensions on corners of a hypercube.
+    Good for testing clustering algorithms.
+
+    Parameters
+    ----------
+    dim : Dimensionality of the dataset
+    npoints : Number of points to generate
+
+    Returns
+    -------
+    highd : 2D array containing the positions of all points
+    clusters : 1D array containing the cluster identity
+
+    """
+    hc = hypercube(dim)
+    highd = np.empty((npoints, dim))
+    clusters = np.empty((npoints,), dtype=int)
+    for i in range(npoints):
+        index = np.random.randint(0, hc.shape[0])
+        highd[i] = hc[index] + np.random.randn(dim) / 10
+        clusters[i] = index
+    return highd, clusters
+
+
+def py2c(*args, dtype=np.float64) -> Tuple[np.ndarray, ...]:
+    """
+    Make ndarrays C contiguous and ensure a certain datatype.
+
+    Parameters
+    ----------
+    args : Any number of numpy ndarrays of any shape and datatype
+    dtype : Numpy-compatible datatype of the array
+
+    Returns
+    -------
+    arr : C-contiguous array
+
+    """
+    return tuple([np.ascontiguousarray(arg, dtype=dtype) for arg in args])
+
+
+def array_to_pointer(arr: np.ndarray) -> np.ndarray:
+    """
+    Convert 2D numpy arrays to array of pointers.
+
+    Parameters
+    ----------
+    arr : Array to be converted, should be C-contiguous
+
+    Returns
+    -------
+    pointer : Array of pointers
+
+    """
+    return (arr.__array_interface__['data'][0] +
+            np.arange(arr.shape[0]) * arr.strides[0]).astype(np.uintp)
+
+
+def aligned(arr: np.ndarray, alignment: int=32) -> np.ndarray:
+    """
+    Align numpy array to a specific boundary.
+
+    Parameters
+    ----------
+    arr : Numpy array
+    alignment : Alignment in bytes
+
+    Returns
+    -------
+    aligned : Aligned array
+
+    """
+
+    # Already aligned
+    if (arr.ctypes.data % alignment) == 0:
+        return arr
+
+    extra = alignment / arr.itemsize
+    buffer = np.empty(arr.size + extra, dtype=arr.dtype)
+    offset = (-buffer.ctypes.data % alignment) / arr.itemsize
+    newarr = buffer[offset:offset + arr.size].reshape(arr.shape)
+    np.copyto(newarr, arr)
+    assert (newarr.ctypes.data % alignment) == 0
+    return newarr
