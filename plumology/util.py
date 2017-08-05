@@ -11,7 +11,8 @@ import pandas as pd
 
 
 __all__ = ['last_nonzero', 'dict_to_dataframe', 'preserve_cwd', 'typecheck',
-           'hypercube', 'make_blobs', 'py2c', 'aligned', 'array_to_pointer']
+           'hypercube', 'make_blobs', 'py2c', 'aligned', 'array_to_pointer',
+           'extend_array']
 
 
 def preserve_cwd(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
