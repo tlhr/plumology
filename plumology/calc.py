@@ -11,7 +11,7 @@ from typing import (Sequence, List, Tuple, Dict, Union, Optional, Mapping)
 import h5py
 import numpy as np
 import pandas as pd
-import scipy.stats.entropy
+import scipy.stats
 
 from .io import read_nmr, read_rdc
 from .util import preserve_cwd
