@@ -100,7 +100,7 @@ def dict_to_dataframe(
     return pd.concat(dfs).set_index(grouper, append=True).sort_index()
 
 
-def extend_array(arr: np.ndarray, modulo: int=4) -> np.ndarray:
+def extend_array(arr: np.ndarray, modulo: int) -> np.ndarray:
     """
     Extend a 2D array with zeros along axis 1, so that it's width is divisible
     by modulo.
@@ -119,7 +119,7 @@ def extend_array(arr: np.ndarray, modulo: int=4) -> np.ndarray:
         return arr
     else:
         return np.column_stack(
-            (arr, np.zeros((arr.shape[0], 4 - arr.shape[1] % 4),
+            (arr, np.zeros((arr.shape[0], modulo - arr.shape[1] % modulo),
                            dtype=arr.dtype))
         )
 
