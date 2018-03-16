@@ -1,5 +1,6 @@
 """util - Utility functions"""
 
+from collections import OrderedDict
 import itertools
 import functools
 from inspect import signature
@@ -68,7 +69,7 @@ def last_nonzero(data: pd.DataFrame) -> pd.Series:
     nonzero : Series of last non-zero datapoints.
 
     """
-    nonzero = {}
+    nonzero = OrderedDict()
     for col in data.columns:
         vals = data[col][(data[col] > 0.000) | (data[col] < 0.000)]
         nonzero[col] = vals.iloc[-1] if vals.size > 0 else 0.0
