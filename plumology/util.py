@@ -220,7 +220,7 @@ def aligned(arr: np.ndarray, alignment: int=32) -> np.ndarray:
     if (arr.ctypes.data % alignment) == 0:
         return arr
 
-    extra = alignment / arr.itemsize
+    extra = alignment // arr.itemsize
     buffer = np.empty(arr.size + extra, dtype=arr.dtype)
     offset = (-buffer.ctypes.data % alignment) / arr.itemsize
     newarr = buffer[offset:offset + arr.size].reshape(arr.shape)
