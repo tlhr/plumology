@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import RegularPolyCollection
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 
-from .util import stats, chunk_range, free_energy
-from .util import dist1D as calc_dist1D
+from .calc import stats, chunk_range, free_energy
+from .calc import dist1d as calc_dist1D
 from .io import read_multi, read_plumed
 
 __all__ = ['fast', 'dist1D', 'dist2D', 'hexplot', 'histogram', 'dihedral',
